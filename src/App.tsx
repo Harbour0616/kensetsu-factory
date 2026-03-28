@@ -70,7 +70,7 @@ const machineTargets: Record<string, { x: number; y: number }> = {
   I: { x: 670, y: 420 },
 }
 
-type DinoApi = { moveTo: (x: number, y: number, cb?: () => void) => void; jump: (cb?: () => void) => void }
+type DinoApi = { moveTo: (x: number, y: number, cb?: () => void) => void; moveJumpNavigate: (x: number, y: number, navigateFn: () => void) => void }
 
 export default function App() {
   const navigate = useNavigate()
@@ -262,26 +262,7 @@ export default function App() {
       })
     }
 
-    function jump(cb?: () => void) {
-      let jumpFrame = 0
-      const jumpTotal = 24
-      const jumpHeight = 30
-      function jumpAnim() {
-        jumpFrame++
-        const progress = jumpFrame / jumpTotal
-        const offsetY = -Math.sin(Math.PI * progress) * jumpHeight
-        dinoEl.setAttribute('y', String(state.y + offsetY))
-        helmetEl.setAttribute('y', String(state.y - 40 + offsetY))
-        if (jumpFrame < jumpTotal) {
-          requestAnimationFrame(jumpAnim)
-        } else {
-          cb?.()
-        }
-      }
-      requestAnimationFrame(jumpAnim)
-    }
-
-    // Expose moveTo and jump to other handlers
+    // Expose moveTo and moveJumpNavigate to other handlers
     dinoApiRef.current = {
       moveTo(x: number, y: number, cb?: () => void) {
         moveTo(x, y, () => {
@@ -290,7 +271,34 @@ export default function App() {
           patrolTimeout = setTimeout(patrol, 1500)
         })
       },
-      jump,
+      moveJumpNavigate(x: number, y: number, navigateFn: () => void) {
+        // Stop patrol, clear any pending arrival
+        onArrival = null
+        if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
+
+        moveTo(x, y, () => {
+          // Confirmed arrival — now jump
+          const baseY = state.y
+          let jumpFrame = 0
+          const jumpTotal = 30
+          const jumpHeight = 35
+
+          function jumpAnim() {
+            jumpFrame++
+            const progress = jumpFrame / jumpTotal
+            const offsetY = -Math.sin(Math.PI * progress) * jumpHeight
+            dinoEl.setAttribute('y', String(baseY + offsetY))
+            helmetEl.setAttribute('y', String(baseY - 40 + offsetY))
+            if (jumpFrame < jumpTotal) {
+              requestAnimationFrame(jumpAnim)
+            } else {
+              setTimeout(() => navigateFn(), 300)
+            }
+          }
+
+          setTimeout(() => requestAnimationFrame(jumpAnim), 200)
+        })
+      },
     }
 
     setDinoPos(state.x, state.y, true)
@@ -423,11 +431,7 @@ export default function App() {
 
             {/* ACTIVE A: 請求書スキャナー */}
             <g className="m-group" onClick={() => {
-              dinoApiRef.current?.moveTo(560, 310, () => {
-                dinoApiRef.current?.jump(() => {
-                  setTimeout(() => navigate('/demo/invoice'), 100)
-                })
-              })
+              dinoApiRef.current?.moveJumpNavigate(560, 310, () => navigate('/demo/invoice'))
             }}>
               <polygon points="655,127 655,207 600,234 600,154" fill="#5c3d1e" />
               <polygon points="545,127 600,154 600,234 545,207" fill="#3d2a0f" />
