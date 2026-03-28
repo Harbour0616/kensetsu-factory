@@ -46,10 +46,32 @@ const bubbleData: [number, number, string, string][] = [
   [71, 68, '資金繰り、見える化します', 'left'],
 ]
 
+// ===== Dino Config =====
+const dinoPatrolPoints = [
+  { x: 360, y: 400 },
+  { x: 480, y: 460 },
+  { x: 600, y: 500 },
+  { x: 720, y: 460 },
+  { x: 850, y: 410 },
+]
+
+const machineTargets: Record<string, { x: number; y: number }> = {
+  A: { x: 560, y: 200 },
+  B: { x: 670, y: 260 },
+  C: { x: 615, y: 280 },
+  D: { x: 780, y: 310 },
+  E: { x: 725, y: 340 },
+  F: { x: 450, y: 310 },
+  G: { x: 560, y: 370 },
+  H: { x: 505, y: 390 },
+  I: { x: 670, y: 420 },
+}
+
 export default function App() {
   const navigate = useNavigate()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<HTMLDivElement>(null)
+  const dinoRef = useRef<{ el: SVGTextElement | null; helmet: SVGTextElement | null; rushTimeout: ReturnType<typeof setTimeout> | null }>({ el: null, helmet: null, rushTimeout: null })
   const [modal, setModal] = useState<{ open: boolean; id: string }>({ open: false, id: '' })
 
   const currentMachine = modal.id ? machines[modal.id] : null
@@ -146,8 +168,95 @@ export default function App() {
     }
   }, [])
 
+  // ===== Dino Patrol =====
+  useEffect(() => {
+    const svg = document.getElementById('factory-svg')
+    if (!svg) return
+
+    const dinoEl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    dinoEl.setAttribute('font-size', '40')
+    dinoEl.setAttribute('text-anchor', 'middle')
+    dinoEl.style.transition = 'all 1.5s ease'
+    dinoEl.style.filter = 'drop-shadow(0 0 6px #6effc4)'
+    dinoEl.textContent = '🦖'
+    svg.appendChild(dinoEl)
+
+    const helmetEl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+    helmetEl.setAttribute('font-size', '22')
+    helmetEl.setAttribute('text-anchor', 'middle')
+    helmetEl.style.transition = 'all 1.5s ease'
+    helmetEl.textContent = '⛑️'
+    svg.appendChild(helmetEl)
+
+    dinoRef.current.el = dinoEl
+    dinoRef.current.helmet = helmetEl
+
+    let posIndex = 0
+
+    function moveDino() {
+      const pos = dinoPatrolPoints[posIndex]
+      const nextIndex = (posIndex + 1) % dinoPatrolPoints.length
+      const nextPos = dinoPatrolPoints[nextIndex]
+      posIndex = nextIndex
+
+      dinoEl.setAttribute('x', String(pos.x))
+      dinoEl.setAttribute('y', String(pos.y))
+      helmetEl.setAttribute('x', String(pos.x + 2))
+      helmetEl.setAttribute('y', String(pos.y - 28))
+
+      const dir = nextPos.x > pos.x ? 1 : -1
+      if (dir === -1) {
+        dinoEl.setAttribute('transform', `translate(${pos.x * 2}, 0) scale(-1,1)`)
+        helmetEl.setAttribute('transform', `translate(${(pos.x + 2) * 2}, 0) scale(-1,1)`)
+      } else {
+        dinoEl.removeAttribute('transform')
+        helmetEl.removeAttribute('transform')
+      }
+    }
+
+    moveDino()
+    const timer = setInterval(moveDino, 3000)
+
+    return () => {
+      clearInterval(timer)
+      dinoEl.remove()
+      helmetEl.remove()
+    }
+  }, [])
+
+  // ===== Rush Dino to Machine =====
+  const rushDino = useCallback((id: string) => {
+    const d = dinoRef.current
+    if (!d.el || !d.helmet) return
+    const target = machineTargets[id]
+    if (!target) return
+
+    // Cancel any pending rush-back
+    if (d.rushTimeout) clearTimeout(d.rushTimeout)
+
+    // Quick transition
+    d.el.style.transition = 'all 0.6s ease'
+    d.helmet.style.transition = 'all 0.6s ease'
+
+    d.el.setAttribute('x', String(target.x))
+    d.el.setAttribute('y', String(target.y))
+    d.el.removeAttribute('transform')
+    d.helmet.setAttribute('x', String(target.x + 2))
+    d.helmet.setAttribute('y', String(target.y - 28))
+    d.helmet.removeAttribute('transform')
+
+    // Restore slow transition after rush
+    d.rushTimeout = setTimeout(() => {
+      d.el!.style.transition = 'all 1.5s ease'
+      d.helmet!.style.transition = 'all 1.5s ease'
+    }, 700)
+  }, [])
+
   // ===== Modal Handlers =====
-  const openModal = useCallback((id: string) => setModal({ open: true, id }), [])
+  const openModal = useCallback((id: string) => {
+    rushDino(id)
+    setModal({ open: true, id })
+  }, [rushDino])
 
   const handleDemo = useCallback(() => {
     if (currentMachine?.active && currentMachine.demo) {
@@ -254,7 +363,7 @@ export default function App() {
             </circle>
 
             {/* ACTIVE A: 請求書スキャナー */}
-            <g className="m-group" onClick={() => { window.location.href = '/demo/invoice' }}>
+            <g className="m-group" onClick={() => { rushDino('A'); window.location.href = '/demo/invoice' }}>
               <polygon points="655,147 655,207 600,234 600,174" fill="#1a5c3c" />
               <polygon points="545,147 600,174 600,234 545,207" fill="#124a30" />
               <polygon className="m-top" points="600,120 655,147 600,174 545,147" fill="#3aae74" filter="url(#glow)" />
@@ -348,9 +457,7 @@ export default function App() {
               <text x="710" y="348" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#3a4a3a">開発中...</text>
             </g>
 
-            {/* Mascots */}
-            <text x="350" y="430" fontSize="52" filter="url(#glow)">🦖</text>
-            <text x="345" y="450" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#6effc4" textAnchor="middle" filter="url(#glow-sm)">KENJIRO</text>
+            {/* Mascots (🦖 is animated via JS, 🦕 stays static) */}
             <text x="960" y="460" fontSize="38" opacity="0.55">🦕</text>
 
             {/* Factory Name Plate */}
