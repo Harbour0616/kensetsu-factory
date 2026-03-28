@@ -277,12 +277,12 @@ export default function App() {
         if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
 
         // Step1: ブロック手前まで歩く
-        moveTo(600, 290, () => {
+        moveTo(573, 280, () => {
           // Step2: ブロックをよじ登る
           let climbFrame = 0
           const climbTotal = 40
           const startY = state.y
-          const targetClimbY = 200
+          const targetClimbY = 133
 
           function climbAnim() {
             climbFrame++
@@ -290,11 +290,11 @@ export default function App() {
             const eased = progress * progress
             const currentY = startY + (targetClimbY - startY) * eased
 
-            state.x = 600
+            state.x = 573
             state.y = currentY
-            dinoEl.setAttribute('x', '600')
+            dinoEl.setAttribute('x', '573')
             dinoEl.setAttribute('y', String(currentY))
-            helmetEl.setAttribute('x', '602')
+            helmetEl.setAttribute('x', '575')
             helmetEl.setAttribute('y', String(currentY - 40))
 
             if (climbFrame < climbTotal) {
