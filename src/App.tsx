@@ -272,35 +272,39 @@ export default function App() {
         })
       },
       moveClimbJumpNavigate(navigateFn: () => void) {
-        // Stop patrol, clear any pending arrival
         onArrival = null
         if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
 
         // Step1: ブロック手前まで歩く
-        moveTo(600, 380, () => {
-          // Step2: よじ登り（線形、60フレーム）
+        moveTo(600, 320, () => {
+
+          // Step2: ブロック上面までよじ登る
           let climbFrame = 0
-          const climbTotal = 60
+          const climbTotal = 50
           const startY = state.y
-          const endY = 175
+          const endY = 127
 
           function climbAnim() {
             climbFrame++
-            const currentY = startY + (endY - startY) * (climbFrame / climbTotal)
+            const t = climbFrame / climbTotal
+            const currentY = startY + (endY - startY) * t
             state.x = 600
             state.y = currentY
             dinoEl.setAttribute('x', '600')
             dinoEl.setAttribute('y', String(currentY))
             helmetEl.setAttribute('x', '602')
             helmetEl.setAttribute('y', String(currentY - 40))
+            dinoEl.removeAttribute('transform')
+            helmetEl.removeAttribute('transform')
+
             if (climbFrame < climbTotal) {
               requestAnimationFrame(climbAnim)
             } else {
-              // Step3: 0.5秒待ってジャンプ→遷移
+              // Step3: 0.5秒待ってジャンプ
               setTimeout(() => {
                 let jumpFrame = 0
-                const jumpTotal = 30
-                const jumpHeight = 50
+                const jumpTotal = 32
+                const jumpHeight = 45
                 const baseY = state.y
 
                 function jumpAnim() {
