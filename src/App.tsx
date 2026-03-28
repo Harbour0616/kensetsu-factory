@@ -312,8 +312,13 @@ export default function App() {
             runFrames(50, t => {
               setPos(lerp(545, 600, t), lerp(225, 127, t))
             }, () => {
-              // Step4: ジャンプ
+              // Step4: (600,127)に着地してからその場でジャンプ
               setTimeout(() => {
+                dinoEl.setAttribute('x', '600')
+                dinoEl.setAttribute('y', '127')
+                helmetEl.setAttribute('x', '602')
+                helmetEl.setAttribute('y', String(127 - 38))
+
                 let f = 0
                 const baseY = 127
                 function jump() {
@@ -321,8 +326,13 @@ export default function App() {
                   const o = -Math.sin(Math.PI * (f / 30)) * 40
                   dinoEl.setAttribute('y', String(baseY + o))
                   helmetEl.setAttribute('y', String(baseY - 38 + o))
-                  if (f < 30) requestAnimationFrame(jump)
-                  else setTimeout(() => navigateFn(), 300)
+                  if (f < 30) {
+                    requestAnimationFrame(jump)
+                  } else {
+                    dinoEl.setAttribute('y', '127')
+                    helmetEl.setAttribute('y', String(127 - 38))
+                    setTimeout(() => navigateFn(), 300)
+                  }
                 }
                 requestAnimationFrame(jump)
               }, 400)
