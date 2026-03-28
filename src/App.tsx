@@ -34,16 +34,16 @@ const machines: Record<string, Machine> = {
 
 // ===== Bubble Data =====
 const bubbleData: [number, number, string, string][] = [
-  [4,  38, 'いらっしゃい！どのアプリを触る？', 'right'],
-  [68, 15, '新機能、続々開発中だよ！', 'bottom'],
-  [3,  62, '建設業の社長、お待ちしてました！', 'right'],
-  [72, 58, 'マシンをクリックしてみて！', 'left'],
+  [3,  38, 'いらっしゃい！どのアプリを触る？', 'right'],
+  [90, 15, '新機能、続々開発中だよ！', 'bottom'],
+  [2,  62, '建設業の社長、お待ちしてました！', 'right'],
+  [92, 58, 'マシンをクリックしてみて！', 'left'],
   [5,  20, 'こういうのでいいんだよ。', 'right'],
-  [70, 78, '原価管理、任せてください！', 'left'],
+  [88, 78, '原価管理、任せてください！', 'left'],
   [4,  50, '請求書はもうAIに読ませよう', 'right'],
-  [69, 35, '粗利が一目でわかる！', 'left'],
+  [91, 35, '粗利が一目でわかる！', 'left'],
   [6,  75, '現場の経費、スマホで完結！', 'right'],
-  [71, 68, '資金繰り、見える化します', 'left'],
+  [93, 68, '資金繰り、見える化します', 'left'],
 ]
 
 // ===== Dino Config =====
@@ -191,14 +191,14 @@ export default function App() {
 
     // Create SVG elements
     const dinoEl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    dinoEl.setAttribute('font-size', '42')
+    dinoEl.setAttribute('font-size', '58')
     dinoEl.setAttribute('text-anchor', 'middle')
     dinoEl.style.filter = 'drop-shadow(0 0 6px #6effc4)'
     dinoEl.textContent = '🦖'
     svg.appendChild(dinoEl)
 
     const helmetEl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    helmetEl.setAttribute('font-size', '24')
+    helmetEl.setAttribute('font-size', '32')
     helmetEl.setAttribute('text-anchor', 'middle')
     helmetEl.textContent = '⛑️'
     svg.appendChild(helmetEl)
@@ -208,7 +208,7 @@ export default function App() {
       dinoEl.setAttribute('x', String(x))
       dinoEl.setAttribute('y', String(y + bob))
       helmetEl.setAttribute('x', String(x + (facingRight ? 2 : -2)))
-      helmetEl.setAttribute('y', String(y - 30 + bob))
+      helmetEl.setAttribute('y', String(y - 40 + bob))
       if (!facingRight) {
         dinoEl.setAttribute('transform', `translate(${x * 2}, 0) scale(-1, 1)`)
         helmetEl.setAttribute('transform', `translate(${x * 2}, 0) scale(-1, 1)`)
@@ -339,48 +339,53 @@ export default function App() {
                 <feGaussianBlur stdDeviation="1.5" result="blur" />
                 <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
               </filter>
+              <pattern id="grass-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+                <rect width="8" height="8" fill="#4ade80" />
+                <rect x="0" y="0" width="4" height="4" fill="#3ecf70" opacity="0.5" />
+                <rect x="4" y="4" width="4" height="4" fill="#3ecf70" opacity="0.5" />
+              </pattern>
             </defs>
 
             {/* Floor Tiles */}
             <g id="floor">
-              <polygon points="600,180 655,207 600,234 545,207" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="655,207 710,234 655,261 600,234" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="710,234 765,261 710,288 655,261" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="765,261 820,288 765,315 710,288" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="820,288 875,315 820,342 765,315" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="875,315 930,342 875,369 820,342" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="545,207 600,234 545,261 490,234" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="600,234 655,261 600,288 545,261" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="655,261 710,288 655,315 600,288" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="710,288 765,315 710,342 655,315" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="765,315 820,342 765,369 710,342" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="820,342 875,369 820,396 765,369" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="490,234 545,261 490,288 435,261" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="545,261 600,288 545,315 490,288" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="600,288 655,315 600,342 545,315" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="655,315 710,342 655,369 600,342" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="710,342 765,369 710,396 655,369" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="765,369 820,396 765,423 710,396" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="435,261 490,288 435,315 380,288" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="490,288 545,315 490,342 435,315" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="545,315 600,342 545,369 490,342" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="600,342 655,369 600,396 545,369" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="655,369 710,396 655,423 600,396" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="710,396 765,423 710,450 655,423" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="380,288 435,315 380,342 325,315" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="435,315 490,342 435,369 380,342" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="490,342 545,369 490,396 435,369" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="545,369 600,396 545,423 490,396" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="600,396 655,423 600,450 545,423" fill="#243d2e" stroke="#1a3a26" strokeWidth="1" />
-              <polygon points="655,423 710,450 655,477 600,450" fill="#1e3628" stroke="#1a3a26" strokeWidth="1" />
+              <polygon points="600,180 655,207 600,234 545,207" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="655,207 710,234 655,261 600,234" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="710,234 765,261 710,288 655,261" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="765,261 820,288 765,315 710,288" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="820,288 875,315 820,342 765,315" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="875,315 930,342 875,369 820,342" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="545,207 600,234 545,261 490,234" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="600,234 655,261 600,288 545,261" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="655,261 710,288 655,315 600,288" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="710,288 765,315 710,342 655,315" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="765,315 820,342 765,369 710,342" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="820,342 875,369 820,396 765,369" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="490,234 545,261 490,288 435,261" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="545,261 600,288 545,315 490,288" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="600,288 655,315 600,342 545,315" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="655,315 710,342 655,369 600,342" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="710,342 765,369 710,396 655,369" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="765,369 820,396 765,423 710,396" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="435,261 490,288 435,315 380,288" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="490,288 545,315 490,342 435,315" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="545,315 600,342 545,369 490,342" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="600,342 655,369 600,396 545,369" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="655,369 710,396 655,423 600,396" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="710,396 765,423 710,450 655,423" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="380,288 435,315 380,342 325,315" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="435,315 490,342 435,369 380,342" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="490,342 545,369 490,396 435,369" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="545,369 600,396 545,423 490,396" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="600,396 655,423 600,450 545,423" fill="#5a8a3a" stroke="#3a6a2a" strokeWidth="1" />
+              <polygon points="655,423 710,450 655,477 600,450" fill="#4a7a2a" stroke="#3a6a2a" strokeWidth="1" />
             </g>
 
             {/* Walls */}
-            <polygon points="325,315 380,288 380,480 325,507" fill="#0c1a10" stroke="#162414" strokeWidth="1" />
-            <polygon points="930,342 930,507 875,534 875,369" fill="#0a1810" stroke="#162414" strokeWidth="1" />
-            <polygon points="325,507 380,480 545,561 490,588" fill="#0e1e12" stroke="#162414" strokeWidth="1" />
-            <polygon points="490,588 545,561 710,642 655,669" fill="#0c1c10" stroke="#162414" strokeWidth="1" />
-            <polygon points="655,669 710,642 875,534 930,507" fill="#0a1a10" stroke="#162414" strokeWidth="1" />
+            <polygon points="325,315 380,288 380,480 325,507" fill="#6b4423" stroke="#3a1e0e" strokeWidth="1" />
+            <polygon points="930,342 930,507 875,534 875,369" fill="#4a2e15" stroke="#3a1e0e" strokeWidth="1" />
+            <polygon points="325,507 380,480 545,561 490,588" fill="#6b4423" stroke="#3a1e0e" strokeWidth="1" />
+            <polygon points="490,588 545,561 710,642 655,669" fill="#4a2e15" stroke="#3a1e0e" strokeWidth="1" />
+            <polygon points="655,669 710,642 875,534 930,507" fill="#6b4423" stroke="#3a1e0e" strokeWidth="1" />
 
             {/* Chimney */}
             <rect x="895" y="120" width="22" height="90" fill="#1a2e1e" stroke="#2a4a2e" strokeWidth="1.5" />
@@ -402,97 +407,97 @@ export default function App() {
                 setTimeout(() => navigate('/demo/invoice'), 300)
               })
             }}>
-              <polygon points="655,147 655,207 600,234 600,174" fill="#1a5c3c" />
-              <polygon points="545,147 600,174 600,234 545,207" fill="#124a30" />
-              <polygon className="m-top" points="600,120 655,147 600,174 545,147" fill="#3aae74" filter="url(#glow)" />
-              <text x="600" y="148" textAnchor="middle" fontSize="28" filter="url(#glow)">🧾</text>
-              <text x="600" y="132" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">請求書スキャナー</text>
-              <rect x="644" y="122" width="9" height="9" fill="#6effc4" filter="url(#glow)">
+              <polygon points="655,127 655,207 600,234 600,154" fill="#5c3d1e" />
+              <polygon points="545,127 600,154 600,234 545,207" fill="#3d2a0f" />
+              <polygon className="m-top" points="600,100 655,127 600,154 545,127" fill="url(#grass-grid)" filter="url(#glow)" />
+              <text x="600" y="128" textAnchor="middle" fontSize="28" filter="url(#glow)">🧾</text>
+              <text x="600" y="112" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">請求書スキャナー</text>
+              <rect x="644" y="102" width="9" height="9" fill="#6effc4" filter="url(#glow)">
                 <animate attributeName="opacity" values="1;0;1" dur="1s" calcMode="discrete" repeatCount="indefinite" />
               </rect>
             </g>
 
             {/* ACTIVE B: レシートスキャン */}
             <g className="m-group" onClick={() => openModal('B')}>
-              <polygon points="765,201 765,261 710,288 710,228" fill="#1a5c3c" />
-              <polygon points="655,201 710,228 710,288 655,261" fill="#124a30" />
-              <polygon className="m-top" points="710,174 765,201 710,228 655,201" fill="#3aae74" filter="url(#glow)" />
-              <text x="710" y="202" textAnchor="middle" fontSize="28" filter="url(#glow)">📱</text>
-              <text x="710" y="186" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">レシートスキャン</text>
-              <rect x="754" y="176" width="9" height="9" fill="#6effc4" filter="url(#glow)">
+              <polygon points="765,181 765,261 710,288 710,208" fill="#5c3d1e" />
+              <polygon points="655,181 710,208 710,288 655,261" fill="#3d2a0f" />
+              <polygon className="m-top" points="710,154 765,181 710,208 655,181" fill="url(#grass-grid)" filter="url(#glow)" />
+              <text x="710" y="182" textAnchor="middle" fontSize="28" filter="url(#glow)">📱</text>
+              <text x="710" y="166" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">レシートスキャン</text>
+              <rect x="754" y="156" width="9" height="9" fill="#6effc4" filter="url(#glow)">
                 <animate attributeName="opacity" values="1;0;1" dur="0.8s" calcMode="discrete" begin="0.3s" repeatCount="indefinite" />
               </rect>
             </g>
 
             {/* ACTIVE C: 粗利マネージャー */}
             <g className="m-group" onClick={() => openModal('C')}>
-              <polygon points="710,228 710,288 655,315 655,255" fill="#1a5c3c" />
-              <polygon points="600,228 655,255 655,315 600,288" fill="#124a30" />
-              <polygon className="m-top" points="655,201 710,228 655,255 600,228" fill="#3aae74" filter="url(#glow)" />
-              <text x="655" y="229" textAnchor="middle" fontSize="28" filter="url(#glow)">📊</text>
-              <text x="655" y="213" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">粗利マネージャー</text>
-              <rect x="699" y="203" width="9" height="9" fill="#6effc4" filter="url(#glow)">
+              <polygon points="710,208 710,288 655,315 655,235" fill="#5c3d1e" />
+              <polygon points="600,208 655,235 655,315 600,288" fill="#3d2a0f" />
+              <polygon className="m-top" points="655,181 710,208 655,235 600,208" fill="url(#grass-grid)" filter="url(#glow)" />
+              <text x="655" y="209" textAnchor="middle" fontSize="28" filter="url(#glow)">📊</text>
+              <text x="655" y="193" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">粗利マネージャー</text>
+              <rect x="699" y="183" width="9" height="9" fill="#6effc4" filter="url(#glow)">
                 <animate attributeName="opacity" values="1;0;1" dur="1.2s" calcMode="discrete" begin="0.6s" repeatCount="indefinite" />
               </rect>
             </g>
 
             {/* LOCKED D: 資金繰りナビ */}
             <g className="m-group locked" onClick={() => openModal('D')} style={{ opacity: 0.5 }}>
-              <polygon points="875,255 875,315 820,342 820,282" fill="#1a2a1e" />
-              <polygon points="765,255 820,282 820,342 765,315" fill="#121e14" />
-              <polygon className="m-top" points="820,228 875,255 820,282 765,255" fill="#253526" />
+              <polygon points="875,255 875,315 820,342 820,282" fill="#4a4a4a" />
+              <polygon points="765,255 820,282 820,342 765,315" fill="#333333" />
+              <polygon className="m-top" points="820,228 875,255 820,282 765,255" fill="#666666" />
               <text x="820" y="256" textAnchor="middle" fontSize="26">🏦</text>
-              <text x="820" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#556655">資金繰りナビ</text>
+              <text x="820" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">資金繰りナビ</text>
               <text x="852" y="235" fontSize="14">🔒</text>
             </g>
 
             {/* LOCKED E: 工事台帳 */}
             <g className="m-group locked" onClick={() => openModal('E')} style={{ opacity: 0.5 }}>
-              <polygon points="820,282 820,342 765,369 765,309" fill="#1a2a1e" />
-              <polygon points="710,282 765,309 765,369 710,342" fill="#121e14" />
-              <polygon className="m-top" points="765,255 820,282 765,309 710,282" fill="#253526" />
+              <polygon points="820,282 820,342 765,369 765,309" fill="#4a4a4a" />
+              <polygon points="710,282 765,309 765,369 710,342" fill="#333333" />
+              <polygon className="m-top" points="765,255 820,282 765,309 710,282" fill="#666666" />
               <text x="765" y="283" textAnchor="middle" fontSize="26">📋</text>
-              <text x="765" y="267" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#556655">工事台帳</text>
+              <text x="765" y="267" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">工事台帳</text>
               <text x="797" y="262" fontSize="14">🔒</text>
             </g>
 
             {/* LOCKED F: 労務費日報 */}
             <g className="m-group locked" onClick={() => openModal('F')} style={{ opacity: 0.5 }}>
-              <polygon points="545,255 545,315 490,342 490,282" fill="#1a2a1e" />
-              <polygon points="435,255 490,282 490,342 435,315" fill="#121e14" />
-              <polygon className="m-top" points="490,228 545,255 490,282 435,255" fill="#253526" />
+              <polygon points="545,255 545,315 490,342 490,282" fill="#4a4a4a" />
+              <polygon points="435,255 490,282 490,342 435,315" fill="#333333" />
+              <polygon className="m-top" points="490,228 545,255 490,282 435,255" fill="#666666" />
               <text x="490" y="256" textAnchor="middle" fontSize="26">👷</text>
-              <text x="490" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#556655">労務費日報</text>
+              <text x="490" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">労務費日報</text>
               <text x="522" y="235" fontSize="14">🔒</text>
             </g>
 
             {/* LOCKED G: クレカ照合 */}
             <g className="m-group locked" onClick={() => openModal('G')} style={{ opacity: 0.5 }}>
-              <polygon points="655,309 655,369 600,396 600,336" fill="#1a2a1e" />
-              <polygon points="545,309 600,336 600,396 545,369" fill="#121e14" />
-              <polygon className="m-top" points="600,282 655,309 600,336 545,309" fill="#253526" />
+              <polygon points="655,309 655,369 600,396 600,336" fill="#4a4a4a" />
+              <polygon points="545,309 600,336 600,396 545,369" fill="#333333" />
+              <polygon className="m-top" points="600,282 655,309 600,336 545,309" fill="#666666" />
               <text x="600" y="310" textAnchor="middle" fontSize="26">💳</text>
-              <text x="600" y="294" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#556655">クレカ照合</text>
+              <text x="600" y="294" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">クレカ照合</text>
               <text x="632" y="289" fontSize="14">🔒</text>
             </g>
 
             {/* LOCKED H: 現場管理 */}
             <g className="m-group locked" onClick={() => openModal('H')} style={{ opacity: 0.5 }}>
-              <polygon points="600,336 600,396 545,423 545,363" fill="#1a2a1e" />
-              <polygon points="490,336 545,363 545,423 490,396" fill="#121e14" />
-              <polygon className="m-top" points="545,309 600,336 545,363 490,336" fill="#253526" />
+              <polygon points="600,336 600,396 545,423 545,363" fill="#4a4a4a" />
+              <polygon points="490,336 545,363 545,423 490,396" fill="#333333" />
+              <polygon className="m-top" points="545,309 600,336 545,363 490,336" fill="#666666" />
               <text x="545" y="337" textAnchor="middle" fontSize="26">🏗️</text>
-              <text x="545" y="321" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#556655">現場管理</text>
+              <text x="545" y="321" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">現場管理</text>
               <text x="577" y="316" fontSize="14">🔒</text>
             </g>
 
             {/* LOCKED I: 開発中 */}
             <g className="m-group locked" onClick={() => openModal('I')} style={{ opacity: 0.35 }}>
-              <polygon points="765,363 765,423 710,450 710,390" fill="#141e16" />
-              <polygon points="655,363 710,390 710,450 655,423" fill="#0e160f" />
-              <polygon className="m-top" points="710,336 765,363 710,390 655,363" fill="#1a2a1c" />
+              <polygon points="765,363 765,423 710,450 710,390" fill="#4a4a4a" />
+              <polygon points="655,363 710,390 710,450 655,423" fill="#333333" />
+              <polygon className="m-top" points="710,336 765,363 710,390 655,363" fill="#666666" />
               <text x="710" y="364" textAnchor="middle" fontSize="26">⚙️</text>
-              <text x="710" y="348" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#3a4a3a">開発中...</text>
+              <text x="710" y="348" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#888888">開発中...</text>
             </g>
 
             {/* Mascots (🦖 is animated via JS, 🦕 stays static) */}
