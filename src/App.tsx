@@ -277,46 +277,40 @@ export default function App() {
         if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
 
         // Step1: ブロック手前まで歩く
-        moveTo(573, 280, () => {
-          // Step2: ブロックをよじ登る
+        moveTo(573, 350, () => {
+          // Step2: よじ登り（線形、60フレーム）
           let climbFrame = 0
-          const climbTotal = 40
+          const climbTotal = 60
           const startY = state.y
-          const targetClimbY = 133
+          const endY = 133
 
           function climbAnim() {
             climbFrame++
-            const progress = climbFrame / climbTotal
-            const eased = progress * progress
-            const currentY = startY + (targetClimbY - startY) * eased
-
+            const currentY = startY + (endY - startY) * (climbFrame / climbTotal)
             state.x = 573
             state.y = currentY
             dinoEl.setAttribute('x', '573')
             dinoEl.setAttribute('y', String(currentY))
             helmetEl.setAttribute('x', '575')
             helmetEl.setAttribute('y', String(currentY - 40))
-
             if (climbFrame < climbTotal) {
               requestAnimationFrame(climbAnim)
             } else {
-              // Step3: 上に着いたら0.5秒待ってジャンプ
+              // Step3: 0.5秒待ってジャンプ→遷移
               setTimeout(() => {
                 let jumpFrame = 0
                 const jumpTotal = 30
-                const jumpHeight = 40
+                const jumpHeight = 50
                 const baseY = state.y
 
                 function jumpAnim() {
                   jumpFrame++
-                  const progress = jumpFrame / jumpTotal
-                  const offsetY = -Math.sin(Math.PI * progress) * jumpHeight
+                  const offsetY = -Math.sin(Math.PI * (jumpFrame / jumpTotal)) * jumpHeight
                   dinoEl.setAttribute('y', String(baseY + offsetY))
                   helmetEl.setAttribute('y', String(baseY - 40 + offsetY))
                   if (jumpFrame < jumpTotal) {
                     requestAnimationFrame(jumpAnim)
                   } else {
-                    // Step4: ジャンプ完了→0.3秒後に遷移
                     setTimeout(() => navigateFn(), 300)
                   }
                 }
