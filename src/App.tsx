@@ -254,7 +254,7 @@ export default function App() {
             </circle>
 
             {/* ACTIVE A: 請求書スキャナー */}
-            <g className="m-group" onClick={() => openModal('A')}>
+            <g className="m-group" onClick={() => { window.location.href = '/demo/invoice' }}>
               <polygon points="655,147 655,207 600,234 600,174" fill="#1a5c3c" />
               <polygon points="545,147 600,174 600,234 545,207" fill="#124a30" />
               <polygon className="m-top" points="600,120 655,147 600,174 545,147" fill="#3aae74" filter="url(#glow)" />

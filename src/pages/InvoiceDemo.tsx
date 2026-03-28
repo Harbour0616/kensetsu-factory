@@ -1,19 +1,19 @@
 import { useState, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { scanInvoice, type OcrResult } from '../lib/ocr'
 
 export default function InvoiceDemo() {
-  const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
+  const [fileData, setFileData] = useState<{ base64: string; mediaType: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<OcrResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const processFile = useCallback(async (file: File) => {
+  const handleFile = useCallback((file: File) => {
     setError(null)
     setResult(null)
+    setFileData(null)
 
     const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf']
     if (!validTypes.includes(file.type)) {
@@ -22,154 +22,189 @@ export default function InvoiceDemo() {
     }
 
     const reader = new FileReader()
-    reader.onload = async () => {
+    reader.onload = () => {
       const dataUrl = reader.result as string
       setPreview(dataUrl)
-
-      const base64 = dataUrl.split(',')[1]
-      const mediaType = file.type
-
-      setLoading(true)
-      try {
-        const res = await scanInvoice(base64, mediaType)
-        setResult(res)
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'エラーが発生しました')
-      } finally {
-        setLoading(false)
-      }
+      setFileData({ base64: dataUrl.split(',')[1], mediaType: file.type })
     }
     reader.readAsDataURL(file)
   }, [])
+
+  const startScan = useCallback(async () => {
+    if (!fileData) return
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await scanInvoice(fileData.base64, fileData.mediaType)
+      setResult(res)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'エラーが発生しました')
+    } finally {
+      setLoading(false)
+    }
+  }, [fileData])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDragging(false)
     const file = e.dataTransfer.files[0]
-    if (file) processFile(file)
-  }, [processFile])
+    if (file) handleFile(file)
+  }, [handleFile])
 
   const onFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) processFile(file)
-  }, [processFile])
+    if (file) handleFile(file)
+  }, [handleFile])
 
   return (
-    <div className="min-h-screen bg-[#06100e] text-[#6effc4] font-dot">
+    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', background: '#06100e', overflow: 'hidden' }}>
       {/* Header */}
-      <div className="border-b-2 border-[#1a3a2a] bg-[#050e0a] px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <span className="text-2xl">🧾</span>
-          <h1 className="font-pixel text-xs leading-relaxed">
-            請求書スキャナー<br />
-            <span className="text-[8px] text-[#d4edd8]">INVOICE SCANNER DEMO</span>
-          </h1>
+      <header style={{
+        flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '14px 32px', borderBottom: '2px solid #1a3a2a', background: '#050e0a', zIndex: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span style={{ fontSize: 28 }}>🧾</span>
+          <span style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 18, color: '#6effc4', textShadow: '0 0 12px #6effc4', letterSpacing: 1 }}>
+            請求書スキャナー
+          </span>
         </div>
         <button
-          onClick={() => navigate('/')}
-          className="font-dot text-xs text-[#6effc4] border border-[#1a3a2a] px-4 py-2 hover:bg-[#0a2018] transition-colors"
+          onClick={() => { window.location.href = '/' }}
+          style={{
+            fontFamily: "'DotGothic16',monospace", fontSize: 12, color: '#6effc4', background: 'transparent',
+            border: '1px solid #1a3a2a', padding: '8px 18px', cursor: 'pointer',
+          }}
         >
           ← 工場に戻る
         </button>
-      </div>
+      </header>
 
-      <div className="max-w-4xl mx-auto p-8">
-        {/* Drop Zone */}
-        <div
-          onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={onDrop}
-          onClick={() => fileRef.current?.click()}
-          className={`
-            border-2 border-dashed rounded-none p-12 text-center cursor-pointer transition-all
-            ${dragging
-              ? 'border-[#6effc4] bg-[#0a2018] shadow-[0_0_24px_rgba(110,255,196,0.3)]'
-              : 'border-[#1a3a2a] hover:border-[#3a7a5a] bg-[#0a1410]'}
-          `}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*,application/pdf"
-            onChange={onFileChange}
-            className="hidden"
-          />
-          <div className="text-4xl mb-4">📄</div>
-          <p className="font-dot text-sm mb-2">
-            請求書の画像・PDFをドラッグ＆ドロップ
-          </p>
-          <p className="font-dot text-xs text-[#445544]">
-            またはクリックしてファイルを選択（PNG, JPEG, PDF）
-          </p>
+      {/* Main 2-column */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* Left: Upload */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 28, borderRight: '1px solid #1a3a2a', overflow: 'auto' }}>
+          {!preview ? (
+            /* Drop Zone */
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+              onClick={() => fileRef.current?.click()}
+              style={{
+                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                border: `2px dashed ${dragging ? '#6effc4' : '#2a4a3a'}`, background: dragging ? '#0a2018' : '#0a1a14',
+                cursor: 'pointer', transition: 'all 0.3s',
+                boxShadow: dragging ? '0 0 24px rgba(110,255,196,0.3)' : 'none',
+              }}
+            >
+              <input ref={fileRef} type="file" accept="image/*,application/pdf" onChange={onFileChange} style={{ display: 'none' }} />
+              <div style={{ fontSize: 60, marginBottom: 20 }}>🧾</div>
+              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#6effc4', marginBottom: 12 }}>
+                請求書をドロップ
+              </p>
+              <button
+                onClick={(e) => { e.stopPropagation(); fileRef.current?.click() }}
+                style={{
+                  fontFamily: "'DotGothic16',monospace", fontSize: 11, color: '#6effc4', background: 'transparent',
+                  border: '1px solid #3a7a5a', padding: '8px 20px', cursor: 'pointer',
+                }}
+              >
+                またはファイルを選択
+              </button>
+            </div>
+          ) : (
+            /* Preview + Scan button */
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1a14', border: '1px solid #1a3a2a', marginBottom: 16 }}>
+                <img src={preview} alt="プレビュー" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  onClick={() => { setPreview(null); setFileData(null); setResult(null); setError(null) }}
+                  style={{
+                    fontFamily: "'DotGothic16',monospace", fontSize: 11, color: '#6effc4', background: 'transparent',
+                    border: '1px solid #2a4a3a', padding: '12px 20px', cursor: 'pointer', flexShrink: 0,
+                  }}
+                >
+                  別のファイル
+                </button>
+                <button
+                  onClick={startScan}
+                  disabled={loading}
+                  style={{
+                    flex: 1, fontFamily: "'Press Start 2P',monospace", fontSize: 11,
+                    color: loading ? '#4a9e7a' : '#0a1a14', background: loading ? '#1a3a2a' : '#6effc4',
+                    border: 'none', padding: '14px 20px', cursor: loading ? 'default' : 'pointer',
+                  }}
+                >
+                  {loading ? '読み取り中...' : '▶ 読み取り開始'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="mt-6 border-2 border-[#ff6b6b] bg-[#1a0a0a] p-4 font-dot text-sm text-[#ff6b6b]">
-            ⚠ {error}
-          </div>
-        )}
-
-        {/* Preview + Results */}
-        {preview && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Image Preview */}
-            <div className="border-2 border-[#1a3a2a] bg-[#0a1410] p-4">
-              <h2 className="font-pixel text-[10px] mb-4 text-[#f9c74f]">▶ アップロード画像</h2>
-              <img
-                src={preview}
-                alt="請求書プレビュー"
-                className="w-full object-contain max-h-[400px]"
-              />
+        {/* Right: Results */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 28, overflow: 'auto' }}>
+          {error && (
+            <div style={{ border: '2px solid #ff6b6b', background: '#1a0a0a', padding: 16, marginBottom: 20, fontFamily: "'DotGothic16',monospace", fontSize: 12, color: '#ff6b6b' }}>
+              ⚠ {error}
             </div>
+          )}
 
-            {/* Results */}
-            <div className="border-2 border-[#1a3a2a] bg-[#0a1410] p-4">
-              <h2 className="font-pixel text-[10px] mb-4 text-[#f9c74f]">▶ OCR読取結果</h2>
-
-              {loading ? (
-                <div className="flex flex-col items-center justify-center py-12">
-                  <div className="text-3xl mb-4 animate-pulse">⚙️</div>
-                  <p className="font-dot text-sm animate-pulse">AIが読み取り中...</p>
-                </div>
-              ) : result ? (
-                <div className="space-y-4">
-                  <ResultRow label="取引先名" value={result.vendor} icon="🏢" />
-                  <ResultRow label="請求金額" value={result.amount} icon="💰" />
-                  <ResultRow label="請求日" value={result.date} icon="📅" />
-                  <ResultRow label="振込先" value={result.bankAccount} icon="🏦" />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-[#445544]">
-                  <p className="font-dot text-sm">結果がここに表示されます</p>
-                </div>
+          {loading ? (
+            /* Loading */
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+                {[0, 1, 2, 3, 4].map(i => (
+                  <div key={i} style={{
+                    width: 14, height: 14, background: '#6effc4',
+                    animation: `blink 1s step-end infinite`, animationDelay: `${i * 0.2}s`,
+                  }} />
+                ))}
+              </div>
+              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#6effc4' }}>
+                AIが読み取り中...
+              </p>
+            </div>
+          ) : result ? (
+            /* Results */
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <h2 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: '#f9c74f', marginBottom: 4 }}>
+                ▶ 読取結果
+              </h2>
+              <ResultCard icon="🏢" label="取引先名" value={result.vendor} />
+              <ResultCard icon="💰" label="請求金額" value={result.amount} />
+              <ResultCard icon="📅" label="請求日" value={result.date} />
+              <ResultCard icon="🏦" label="振込先" value={result.bankAccount} />
+              {result.raw && result.raw !== JSON.stringify({ vendor: result.vendor, amount: result.amount, date: result.date, bankAccount: result.bankAccount }) && (
+                <ResultCard icon="📝" label="その他備考" value={result.raw.replace(/\{[\s\S]*\}/, '').trim() || 'なし'} />
               )}
             </div>
-          </div>
-        )}
-
-        {/* Usage Note */}
-        <div className="mt-8 border border-[#1a3a2a] bg-[#050e0a] p-6">
-          <h3 className="font-pixel text-[8px] text-[#f9c74f] mb-3">▶ 使い方</h3>
-          <ul className="font-dot text-xs text-[#d4edd8] space-y-2 leading-relaxed">
-            <li>1. 請求書の写真またはPDFをドラッグ＆ドロップ</li>
-            <li>2. AIが取引先名・金額・日付・振込先を自動読み取り</li>
-            <li>3. 結果を確認して業務に活用</li>
-          </ul>
-          <p className="font-dot text-[10px] text-[#445544] mt-4">
-            ※ デモ版です。読み取り精度は画像品質に依存します。
-          </p>
+          ) : (
+            /* Empty state */
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#334433' }}>
+                ← 請求書をアップロードしてください
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-function ResultRow({ label, value, icon }: { label: string; value: string; icon: string }) {
+function ResultCard({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
-    <div className="border border-[#1a3a2a] bg-[#050e0a] p-3">
-      <div className="font-dot text-[10px] text-[#445544] mb-1">{icon} {label}</div>
-      <div className="font-dot text-sm text-[#6effc4]">{value}</div>
+    <div style={{ border: '1px solid #1a3a2a', background: '#0a1a14', padding: '14px 18px' }}>
+      <div style={{ fontFamily: "'DotGothic16',monospace", fontSize: 10, color: '#6effc4', marginBottom: 6, letterSpacing: 1 }}>
+        {icon} {label}
+      </div>
+      <div style={{ fontFamily: "'DotGothic16',monospace", fontSize: 16, color: '#d4edd8', lineHeight: 1.8, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+        {value}
+      </div>
     </div>
   )
 }
