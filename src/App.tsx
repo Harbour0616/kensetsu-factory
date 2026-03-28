@@ -277,12 +277,12 @@ export default function App() {
         if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
 
         // Step1: ブロック手前まで歩く
-        moveTo(600, 420, () => {
+        moveTo(600, 380, () => {
           // Step2: よじ登り（線形、60フレーム）
           let climbFrame = 0
           const climbTotal = 60
           const startY = state.y
-          const endY = 147
+          const endY = 175
 
           function climbAnim() {
             climbFrame++
