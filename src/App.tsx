@@ -47,18 +47,21 @@ const bubbleData: [number, number, string, string][] = [
 ]
 
 // ===== Dino Config =====
-const dinoPatrolPoints = [
+const patrolRoute = [
   { x: 360, y: 400 },
-  { x: 480, y: 460 },
+  { x: 480, y: 455 },
   { x: 600, y: 500 },
-  { x: 720, y: 460 },
-  { x: 850, y: 410 },
+  { x: 720, y: 455 },
+  { x: 850, y: 405 },
+  { x: 720, y: 455 },
+  { x: 600, y: 500 },
+  { x: 480, y: 455 },
 ]
 
 const machineTargets: Record<string, { x: number; y: number }> = {
-  A: { x: 560, y: 200 },
-  B: { x: 670, y: 260 },
-  C: { x: 615, y: 280 },
+  A: { x: 560, y: 310 },
+  B: { x: 670, y: 350 },
+  C: { x: 615, y: 370 },
   D: { x: 780, y: 310 },
   E: { x: 725, y: 340 },
   F: { x: 450, y: 310 },
@@ -67,11 +70,13 @@ const machineTargets: Record<string, { x: number; y: number }> = {
   I: { x: 670, y: 420 },
 }
 
+type DinoApi = { moveTo: (x: number, y: number, cb?: () => void) => void }
+
 export default function App() {
   const navigate = useNavigate()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<HTMLDivElement>(null)
-  const dinoRef = useRef<{ el: SVGTextElement | null; helmet: SVGTextElement | null; rushTimeout: ReturnType<typeof setTimeout> | null }>({ el: null, helmet: null, rushTimeout: null })
+  const dinoApiRef = useRef<DinoApi | null>(null)
   const [modal, setModal] = useState<{ open: boolean; id: string }>({ open: false, id: '' })
 
   const currentMachine = modal.id ? machines[modal.id] : null
@@ -168,95 +173,124 @@ export default function App() {
     }
   }, [])
 
-  // ===== Dino Patrol =====
+  // ===== Dino Walk Animation (rAF) =====
   useEffect(() => {
-    const svg = document.getElementById('factory-svg')
+    const svg = document.getElementById('factory-svg') as SVGSVGElement | null
     if (!svg) return
 
+    const state = {
+      x: 360, y: 400,
+      targetX: 360, targetY: 400,
+      moving: false,
+      speed: 2.5,
+      frameCount: 0,
+    }
+    let routeIndex = 0
+    let onArrival: (() => void) | null = null
+    let patrolTimeout: ReturnType<typeof setTimeout> | null = null
+
+    // Create SVG elements
     const dinoEl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    dinoEl.setAttribute('font-size', '40')
+    dinoEl.setAttribute('font-size', '42')
     dinoEl.setAttribute('text-anchor', 'middle')
-    dinoEl.style.transition = 'all 1.5s ease'
     dinoEl.style.filter = 'drop-shadow(0 0 6px #6effc4)'
     dinoEl.textContent = '🦖'
     svg.appendChild(dinoEl)
 
     const helmetEl = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    helmetEl.setAttribute('font-size', '22')
+    helmetEl.setAttribute('font-size', '24')
     helmetEl.setAttribute('text-anchor', 'middle')
-    helmetEl.style.transition = 'all 1.5s ease'
     helmetEl.textContent = '⛑️'
     svg.appendChild(helmetEl)
 
-    dinoRef.current.el = dinoEl
-    dinoRef.current.helmet = helmetEl
-
-    let posIndex = 0
-
-    function moveDino() {
-      const pos = dinoPatrolPoints[posIndex]
-      const nextIndex = (posIndex + 1) % dinoPatrolPoints.length
-      const nextPos = dinoPatrolPoints[nextIndex]
-      posIndex = nextIndex
-
-      dinoEl.setAttribute('x', String(pos.x))
-      dinoEl.setAttribute('y', String(pos.y))
-      helmetEl.setAttribute('x', String(pos.x + 2))
-      helmetEl.setAttribute('y', String(pos.y - 28))
-
-      const dir = nextPos.x > pos.x ? 1 : -1
-      if (dir === -1) {
-        dinoEl.setAttribute('transform', `translate(${pos.x * 2}, 0) scale(-1,1)`)
-        helmetEl.setAttribute('transform', `translate(${(pos.x + 2) * 2}, 0) scale(-1,1)`)
+    function setDinoPos(x: number, y: number, facingRight: boolean) {
+      const bob = Math.sin(state.frameCount * 0.3) * (state.moving ? 2 : 0)
+      dinoEl.setAttribute('x', String(x))
+      dinoEl.setAttribute('y', String(y + bob))
+      helmetEl.setAttribute('x', String(x + (facingRight ? 2 : -2)))
+      helmetEl.setAttribute('y', String(y - 30 + bob))
+      if (!facingRight) {
+        dinoEl.setAttribute('transform', `translate(${x * 2}, 0) scale(-1, 1)`)
+        helmetEl.setAttribute('transform', `translate(${x * 2}, 0) scale(-1, 1)`)
       } else {
         dinoEl.removeAttribute('transform')
         helmetEl.removeAttribute('transform')
       }
     }
 
-    moveDino()
-    const timer = setInterval(moveDino, 3000)
+    function moveTo(tx: number, ty: number, callback?: () => void) {
+      if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
+      state.targetX = tx
+      state.targetY = ty
+      state.moving = true
+      onArrival = callback || null
+    }
+
+    function gameLoop() {
+      state.frameCount++
+      const dx = state.targetX - state.x
+      const dy = state.targetY - state.y
+      const dist = Math.sqrt(dx * dx + dy * dy)
+
+      if (dist > state.speed) {
+        state.x += (dx / dist) * state.speed
+        state.y += (dy / dist) * state.speed
+        setDinoPos(state.x, state.y, dx > 0)
+      } else {
+        state.x = state.targetX
+        state.y = state.targetY
+        if (state.moving) {
+          state.moving = false
+          if (onArrival) {
+            const cb = onArrival
+            onArrival = null
+            cb()
+          }
+        }
+        setDinoPos(state.x, state.y, true)
+      }
+
+      rafId = requestAnimationFrame(gameLoop)
+    }
+
+    function patrol() {
+      if (state.moving) return
+      routeIndex = (routeIndex + 1) % patrolRoute.length
+      const next = patrolRoute[routeIndex]
+      moveTo(next.x, next.y, () => {
+        patrolTimeout = setTimeout(patrol, 800)
+      })
+    }
+
+    // Expose moveTo to other handlers
+    dinoApiRef.current = {
+      moveTo(x: number, y: number, cb?: () => void) {
+        moveTo(x, y, () => {
+          cb?.()
+          // Resume patrol after rush
+          patrolTimeout = setTimeout(patrol, 1500)
+        })
+      },
+    }
+
+    setDinoPos(state.x, state.y, true)
+    let rafId = requestAnimationFrame(gameLoop)
+    patrolTimeout = setTimeout(patrol, 1000)
 
     return () => {
-      clearInterval(timer)
+      cancelAnimationFrame(rafId)
+      if (patrolTimeout) clearTimeout(patrolTimeout)
       dinoEl.remove()
       helmetEl.remove()
     }
   }, [])
 
-  // ===== Rush Dino to Machine =====
-  const rushDino = useCallback((id: string) => {
-    const d = dinoRef.current
-    if (!d.el || !d.helmet) return
-    const target = machineTargets[id]
-    if (!target) return
-
-    // Cancel any pending rush-back
-    if (d.rushTimeout) clearTimeout(d.rushTimeout)
-
-    // Quick transition
-    d.el.style.transition = 'all 0.6s ease'
-    d.helmet.style.transition = 'all 0.6s ease'
-
-    d.el.setAttribute('x', String(target.x))
-    d.el.setAttribute('y', String(target.y))
-    d.el.removeAttribute('transform')
-    d.helmet.setAttribute('x', String(target.x + 2))
-    d.helmet.setAttribute('y', String(target.y - 28))
-    d.helmet.removeAttribute('transform')
-
-    // Restore slow transition after rush
-    d.rushTimeout = setTimeout(() => {
-      d.el!.style.transition = 'all 1.5s ease'
-      d.helmet!.style.transition = 'all 1.5s ease'
-    }, 700)
-  }, [])
-
   // ===== Modal Handlers =====
   const openModal = useCallback((id: string) => {
-    rushDino(id)
+    const target = machineTargets[id]
+    if (target) dinoApiRef.current?.moveTo(target.x, target.y)
     setModal({ open: true, id })
-  }, [rushDino])
+  }, [])
 
   const handleDemo = useCallback(() => {
     if (currentMachine?.active && currentMachine.demo) {
@@ -363,7 +397,11 @@ export default function App() {
             </circle>
 
             {/* ACTIVE A: 請求書スキャナー */}
-            <g className="m-group" onClick={() => { rushDino('A'); window.location.href = '/demo/invoice' }}>
+            <g className="m-group" onClick={() => {
+              dinoApiRef.current?.moveTo(560, 310, () => {
+                setTimeout(() => navigate('/demo/invoice'), 300)
+              })
+            }}>
               <polygon points="655,147 655,207 600,234 600,174" fill="#1a5c3c" />
               <polygon points="545,147 600,174 600,234 545,207" fill="#124a30" />
               <polygon className="m-top" points="600,120 655,147 600,174 545,147" fill="#3aae74" filter="url(#glow)" />
