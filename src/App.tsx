@@ -275,54 +275,59 @@ export default function App() {
         onArrival = null
         if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
 
-        // Step1: ブロック手前まで歩く
-        moveTo(600, 320, () => {
+        function lerp(a: number, b: number, t: number) { return a + (b - a) * t }
 
-          // Step2: ブロック上面までよじ登る
-          let climbFrame = 0
-          const climbTotal = 50
-          const startY = state.y
-          const endY = 127
-
-          function climbAnim() {
-            climbFrame++
-            const t = climbFrame / climbTotal
-            const currentY = startY + (endY - startY) * t
-            state.x = 600
-            state.y = currentY
-            dinoEl.setAttribute('x', '600')
-            dinoEl.setAttribute('y', String(currentY))
-            helmetEl.setAttribute('x', '602')
-            helmetEl.setAttribute('y', String(currentY - 40))
-            dinoEl.removeAttribute('transform')
-            helmetEl.removeAttribute('transform')
-
-            if (climbFrame < climbTotal) {
-              requestAnimationFrame(climbAnim)
-            } else {
-              // Step3: 0.5秒待ってジャンプ
-              setTimeout(() => {
-                let jumpFrame = 0
-                const jumpTotal = 32
-                const jumpHeight = 45
-                const baseY = state.y
-
-                function jumpAnim() {
-                  jumpFrame++
-                  const offsetY = -Math.sin(Math.PI * (jumpFrame / jumpTotal)) * jumpHeight
-                  dinoEl.setAttribute('y', String(baseY + offsetY))
-                  helmetEl.setAttribute('y', String(baseY - 40 + offsetY))
-                  if (jumpFrame < jumpTotal) {
-                    requestAnimationFrame(jumpAnim)
-                  } else {
-                    setTimeout(() => navigateFn(), 300)
-                  }
-                }
-                requestAnimationFrame(jumpAnim)
-              }, 500)
-            }
+        function runFrames(total: number, onFrame: (t: number) => void, onDone: () => void) {
+          let f = 0
+          function tick() {
+            f++
+            const t = Math.min(f / total, 1)
+            onFrame(t)
+            if (t < 1) requestAnimationFrame(tick)
+            else setTimeout(onDone, 0)
           }
-          requestAnimationFrame(climbAnim)
+          requestAnimationFrame(tick)
+        }
+
+        function setPos(x: number, y: number) {
+          dinoEl.setAttribute('x', String(x))
+          dinoEl.setAttribute('y', String(y))
+          helmetEl.setAttribute('x', String(x + 2))
+          helmetEl.setAttribute('y', String(y - 38))
+          dinoEl.removeAttribute('transform')
+          helmetEl.removeAttribute('transform')
+        }
+
+        // Step1: 床を歩いてx:545まで（y:450固定）
+        state.moving = false
+        const startX = state.x
+        runFrames(50, t => {
+          setPos(lerp(startX, 545, t), 450)
+        }, () => {
+          // Step2: x:545のままy:450→y:225へよじ登る
+          runFrames(60, t => {
+            setPos(545, lerp(450, 225, t))
+          }, () => {
+            // Step3: (545,225)→(600,127)へよじ登る
+            runFrames(50, t => {
+              setPos(lerp(545, 600, t), lerp(225, 127, t))
+            }, () => {
+              // Step4: ジャンプ
+              setTimeout(() => {
+                let f = 0
+                const baseY = 127
+                function jump() {
+                  f++
+                  const o = -Math.sin(Math.PI * (f / 30)) * 40
+                  dinoEl.setAttribute('y', String(baseY + o))
+                  helmetEl.setAttribute('y', String(baseY - 38 + o))
+                  if (f < 30) requestAnimationFrame(jump)
+                  else setTimeout(() => navigateFn(), 300)
+                }
+                requestAnimationFrame(jump)
+              }, 400)
+            })
+          })
         })
       },
     }
