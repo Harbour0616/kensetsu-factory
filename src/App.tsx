@@ -277,21 +277,21 @@ export default function App() {
         if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
 
         // Step1: ブロック手前まで歩く
-        moveTo(573, 350, () => {
+        moveTo(600, 420, () => {
           // Step2: よじ登り（線形、60フレーム）
           let climbFrame = 0
           const climbTotal = 60
           const startY = state.y
-          const endY = 133
+          const endY = 147
 
           function climbAnim() {
             climbFrame++
             const currentY = startY + (endY - startY) * (climbFrame / climbTotal)
-            state.x = 573
+            state.x = 600
             state.y = currentY
-            dinoEl.setAttribute('x', '573')
+            dinoEl.setAttribute('x', '600')
             dinoEl.setAttribute('y', String(currentY))
-            helmetEl.setAttribute('x', '575')
+            helmetEl.setAttribute('x', '602')
             helmetEl.setAttribute('y', String(currentY - 40))
             if (climbFrame < climbTotal) {
               requestAnimationFrame(climbAnim)
