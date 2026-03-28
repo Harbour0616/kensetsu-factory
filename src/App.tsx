@@ -70,7 +70,7 @@ const machineTargets: Record<string, { x: number; y: number }> = {
   I: { x: 670, y: 420 },
 }
 
-type DinoApi = { moveTo: (x: number, y: number, cb?: () => void) => void }
+type DinoApi = { moveTo: (x: number, y: number, cb?: () => void) => void; jump: (cb?: () => void) => void }
 
 export default function App() {
   const navigate = useNavigate()
@@ -262,7 +262,26 @@ export default function App() {
       })
     }
 
-    // Expose moveTo to other handlers
+    function jump(cb?: () => void) {
+      let jumpFrame = 0
+      const jumpTotal = 24
+      const jumpHeight = 30
+      function jumpAnim() {
+        jumpFrame++
+        const progress = jumpFrame / jumpTotal
+        const offsetY = -Math.sin(Math.PI * progress) * jumpHeight
+        dinoEl.setAttribute('y', String(state.y + offsetY))
+        helmetEl.setAttribute('y', String(state.y - 40 + offsetY))
+        if (jumpFrame < jumpTotal) {
+          requestAnimationFrame(jumpAnim)
+        } else {
+          cb?.()
+        }
+      }
+      requestAnimationFrame(jumpAnim)
+    }
+
+    // Expose moveTo and jump to other handlers
     dinoApiRef.current = {
       moveTo(x: number, y: number, cb?: () => void) {
         moveTo(x, y, () => {
@@ -271,6 +290,7 @@ export default function App() {
           patrolTimeout = setTimeout(patrol, 1500)
         })
       },
+      jump,
     }
 
     setDinoPos(state.x, state.y, true)
@@ -404,7 +424,9 @@ export default function App() {
             {/* ACTIVE A: 請求書スキャナー */}
             <g className="m-group" onClick={() => {
               dinoApiRef.current?.moveTo(560, 310, () => {
-                setTimeout(() => navigate('/demo/invoice'), 300)
+                dinoApiRef.current?.jump(() => {
+                  setTimeout(() => navigate('/demo/invoice'), 100)
+                })
               })
             }}>
               <polygon points="655,127 655,207 600,234 600,154" fill="#5c3d1e" />
