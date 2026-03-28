@@ -184,6 +184,7 @@ export default function App() {
       moving: false,
       speed: 2.5,
       frameCount: 0,
+      locked: false,
     }
     let routeIndex = 0
     let onArrival: (() => void) | null = null
@@ -227,27 +228,29 @@ export default function App() {
     }
 
     function gameLoop() {
-      state.frameCount++
-      const dx = state.targetX - state.x
-      const dy = state.targetY - state.y
-      const dist = Math.sqrt(dx * dx + dy * dy)
+      if (!state.locked) {
+        state.frameCount++
+        const dx = state.targetX - state.x
+        const dy = state.targetY - state.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
 
-      if (dist > state.speed) {
-        state.x += (dx / dist) * state.speed
-        state.y += (dy / dist) * state.speed
-        setDinoPos(state.x, state.y, dx > 0)
-      } else {
-        state.x = state.targetX
-        state.y = state.targetY
-        if (state.moving) {
-          state.moving = false
-          if (onArrival) {
-            const cb = onArrival
-            onArrival = null
-            cb()
+        if (dist > state.speed) {
+          state.x += (dx / dist) * state.speed
+          state.y += (dy / dist) * state.speed
+          setDinoPos(state.x, state.y, dx > 0)
+        } else {
+          state.x = state.targetX
+          state.y = state.targetY
+          if (state.moving) {
+            state.moving = false
+            if (onArrival) {
+              const cb = onArrival
+              onArrival = null
+              cb()
+            }
           }
+          setDinoPos(state.x, state.y, true)
         }
-        setDinoPos(state.x, state.y, true)
       }
 
       rafId = requestAnimationFrame(gameLoop)
@@ -272,6 +275,7 @@ export default function App() {
         })
       },
       moveClimbJumpNavigate(navigateFn: () => void) {
+        state.locked = true
         onArrival = null
         if (patrolTimeout) { clearTimeout(patrolTimeout); patrolTimeout = null }
 
