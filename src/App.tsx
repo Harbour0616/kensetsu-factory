@@ -380,8 +380,10 @@ export default function App() {
             <span className="modal-icon">{currentMachine.icon}</span>
             <div className="modal-title">{currentMachine.name}</div>
             <div className="modal-desc">{currentMachine.desc}</div>
-            {currentMachine.active ? (
+            {currentMachine.active && currentMachine.demo ? (
               <button className="modal-btn" onClick={handleDemo}>▶ デモを体験する</button>
+            ) : currentMachine.active ? (
+              <button className="modal-btn" style={{ background: '#1a3a2a', color: '#4a9e7a', cursor: 'default' }}>🔧 近日公開 - お楽しみに！</button>
             ) : (
               <button className="modal-btn locked-btn">🔒 開発中 - お楽しみに</button>
             )}
