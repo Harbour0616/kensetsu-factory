@@ -289,7 +289,8 @@ export default function App() {
           requestAnimationFrame(tick)
         }
 
-        function setPos(x: number, y: number) {
+        function setDinoPos2(x: number, y: number) {
+          state.x = x; state.y = y
           dinoEl.setAttribute('x', String(x))
           dinoEl.setAttribute('y', String(y))
           helmetEl.setAttribute('x', String(x + 2))
@@ -298,44 +299,41 @@ export default function App() {
           helmetEl.removeAttribute('transform')
         }
 
-        // Step1: 床を歩いてx:545まで（y:450固定）
-        state.moving = false
         const startX = state.x
+
+        // Step1: 床を歩いてx:545まで（y:450固定）
         runFrames(50, t => {
-          setPos(lerp(startX, 545, t), 450)
+          setDinoPos2(lerp(startX, 545, t), 450)
         }, () => {
-          // Step2: x:545のままy:450→y:225へよじ登る
+          // Step2: x:545固定でy:450→y:225へよじ登る
           runFrames(60, t => {
-            setPos(545, lerp(450, 225, t))
+            setDinoPos2(545, lerp(450, 225, t))
           }, () => {
             // Step3: (545,225)→(600,127)へよじ登る
             runFrames(50, t => {
-              setPos(lerp(545, 600, t), lerp(225, 127, t))
+              setDinoPos2(lerp(545, 600, t), lerp(225, 127, t))
             }, () => {
-              // Step4: (600,127)に着地してからその場でジャンプ
+              // Step3終了後に必ず(600,127)に固定
+              setDinoPos2(600, 127)
+              // Step4: その場でジャンプ
               setTimeout(() => {
-                dinoEl.setAttribute('x', '600')
-                dinoEl.setAttribute('y', '127')
-                helmetEl.setAttribute('x', '602')
-                helmetEl.setAttribute('y', String(127 - 38))
-
                 let f = 0
-                const baseY = 127
                 function jump() {
                   f++
                   const o = -Math.sin(Math.PI * (f / 30)) * 40
-                  dinoEl.setAttribute('y', String(baseY + o))
-                  helmetEl.setAttribute('y', String(baseY - 38 + o))
+                  dinoEl.setAttribute('x', '600')
+                  dinoEl.setAttribute('y', String(127 + o))
+                  helmetEl.setAttribute('x', '602')
+                  helmetEl.setAttribute('y', String(127 - 38 + o))
                   if (f < 30) {
                     requestAnimationFrame(jump)
                   } else {
-                    dinoEl.setAttribute('y', '127')
-                    helmetEl.setAttribute('y', String(127 - 38))
+                    setDinoPos2(600, 127)
                     setTimeout(() => navigateFn(), 300)
                   }
                 }
                 requestAnimationFrame(jump)
-              }, 400)
+              }, 200)
             })
           })
         })
