@@ -1,0 +1,215 @@
+/* ===== HEADER ===== */
+.header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 32px;
+  border-bottom: 2px solid #1a3a2a;
+  background: #050e0a;
+  z-index: 10;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-logo {
+  font-size: 13px;
+  color: #6effc4;
+  text-shadow: 0 0 12px #6effc4, 2px 2px 0 #0a3a28;
+  letter-spacing: 1px;
+  line-height: 1.7;
+}
+
+.header-badge {
+  background: #0a2018;
+  border: 1px solid #6effc4;
+  padding: 3px 10px;
+  font-size: 6px;
+  color: #6effc4;
+  font-family: 'DotGothic16', monospace;
+  letter-spacing: 3px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 7px;
+  color: #6effc4;
+  font-family: 'DotGothic16', monospace;
+}
+
+.live-dot {
+  width: 6px; height: 6px;
+  background: #6effc4;
+  display: inline-block;
+  animation: blink 1s step-end infinite;
+}
+
+.header-sub {
+  font-size: 6px;
+  color: #f9c74f;
+  font-family: 'DotGothic16', monospace;
+  letter-spacing: 2px;
+}
+
+/* ===== TICKER ===== */
+.ticker-wrap {
+  flex-shrink: 0;
+  overflow: hidden;
+  background: #040c08;
+  border-bottom: 1px solid #1a3a2a;
+  padding: 5px 0;
+}
+.ticker {
+  display: inline-block;
+  white-space: nowrap;
+  animation: ticker 25s linear infinite;
+  font-size: 6px;
+  color: #6effc4;
+  font-family: 'DotGothic16', monospace;
+  letter-spacing: 2px;
+}
+
+/* ===== MAIN SCENE ===== */
+.scene {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#factory-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== STATUS BAR ===== */
+.status-bar {
+  flex-shrink: 0;
+  background: #050e0a;
+  border-top: 2px solid #1a3a2a;
+  padding: 6px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.status-bar span {
+  font-size: 6px;
+  color: #6effc4;
+  font-family: 'DotGothic16', monospace;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+
+.modal {
+  background: #0a1a14;
+  border: 2px solid #6effc4;
+  width: 420px;
+  padding: 28px;
+  box-shadow: 0 0 40px rgba(110,255,196,0.25);
+}
+.modal-icon { font-size: 48px; display: block; margin-bottom: 12px; }
+.modal-title {
+  font-size: 12px;
+  color: #6effc4;
+  margin-bottom: 14px;
+  text-shadow: 0 0 8px #6effc4;
+  line-height: 1.6;
+}
+.modal-desc {
+  font-size: 8px;
+  color: #d4edd8;
+  font-family: 'DotGothic16', monospace;
+  line-height: 2.2;
+  margin-bottom: 20px;
+  white-space: pre-line;
+}
+.modal-btn {
+  display: block;
+  width: 100%;
+  background: #6effc4;
+  color: #0a1a14;
+  border: none;
+  padding: 12px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.modal-btn:hover { background: #9effd8; }
+.modal-btn.locked-btn {
+  background: #1a3a2a;
+  color: #4a9e7a;
+  cursor: default;
+}
+.modal-close {
+  display: block;
+  width: 100%;
+  background: transparent;
+  color: #556655;
+  border: 1px solid #334433;
+  padding: 8px;
+  font-family: 'DotGothic16', monospace;
+  font-size: 7px;
+  cursor: pointer;
+}
+.modal-close:hover { color: #d4edd8; }
+
+/* SVGホバー */
+.m-group { cursor: pointer; }
+.m-group .m-top { transition: fill 0.05s; }
+.m-group:hover .m-top { fill: #5acea4 !important; }
+.m-group.locked { cursor: pointer; }
+
+/* ===== MULTI SPEECH BUBBLES ===== */
+.bubble {
+  position: absolute;
+  background: #0a1a14;
+  border: 2px solid #6effc4;
+  padding: 10px 16px;
+  font-family: 'DotGothic16', monospace;
+  font-size: 14px;
+  color: #6effc4;
+  line-height: 1.8;
+  white-space: nowrap;
+  z-index: 50;
+  box-shadow: 0 0 16px rgba(110,255,196,0.35);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s, transform 0.4s;
+  pointer-events: none;
+}
+.bubble.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.bubble-cursor {
+  display: inline-block;
+  width: 9px; height: 14px;
+  background: #6effc4;
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: blink 0.6s step-end infinite;
+}
