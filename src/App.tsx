@@ -81,37 +81,136 @@ export default function App() {
 
   const currentMachine = modal.id ? machines[modal.id] : null
 
-  // ===== Starfield =====
+  // ===== Jurassic Background =====
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
     let animId: number
+    let lavaFrame = 0
+
+    const stars = Array.from({ length: 80 }, () => ({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * 200,
+      r: Math.random() < 0.3 ? 2 : 1,
+      a: 0.4 + Math.random() * 0.6,
+    }))
+
+    const ptero = [
+      { x: 650, y: 60 }, { x: 680, y: 50 }, { x: 720, y: 65 },
+    ]
+
+    function drawTree(x: number, h: number, color: string) {
+      ctx.fillStyle = color
+      ctx.fillRect(x - 4, canvas!.height - h * 0.3, 8, h * 0.3)
+      ;([[0, h], [10, h * 0.7], [18, h * 0.4]] as [number, number][]).forEach(([off, height]) => {
+        ctx.beginPath()
+        ctx.moveTo(x, canvas!.height - height - off * 0.5)
+        ctx.lineTo(x - height * 0.4, canvas!.height - h * 0.3 - off * 0.3)
+        ctx.lineTo(x + height * 0.4, canvas!.height - h * 0.3 - off * 0.3)
+        ctx.closePath()
+        ctx.fill()
+      })
+    }
+
+    function drawFern(x: number, y: number, color: string) {
+      ctx.fillStyle = color
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 4) * Math.PI - Math.PI / 2
+        const len = 30 - i * 4
+        ctx.fillRect(x + Math.cos(angle) * len - 2, y + Math.sin(angle) * len - 2, 4, 4)
+      }
+    }
 
     function init() {
       canvas!.width = window.innerWidth
       canvas!.height = window.innerHeight
-      const stars = Array.from({ length: 120 }, () => ({
-        x: Math.random() * canvas!.width,
-        y: Math.random() * canvas!.height * 0.6,
-        r: Math.random() < 0.3 ? 2 : 1,
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.3 + Math.random() * 1.2,
-      }))
-      function draw(t: number) {
-        ctx.clearRect(0, 0, canvas!.width, canvas!.height)
-        stars.forEach(s => {
-          const a = 0.3 + 0.7 * Math.abs(Math.sin(s.phase + t * s.speed * 0.001))
-          ctx.fillStyle = `rgba(160,255,200,${a})`
-          ctx.fillRect(Math.floor(s.x), Math.floor(s.y), s.r, s.r)
-        })
-        animId = requestAnimationFrame(draw)
-      }
-      animId = requestAnimationFrame(draw)
+    }
+
+    function draw() {
+      const W = canvas!.width, H = canvas!.height
+
+      const grad = ctx.createLinearGradient(0, 0, 0, H)
+      grad.addColorStop(0, '#0d2235')
+      grad.addColorStop(0.6, '#1a3d4a')
+      grad.addColorStop(1, '#2a6a5a')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, W, H)
+
+      stars.forEach(s => {
+        ctx.fillStyle = `rgba(180,255,210,${s.a})`
+        ctx.fillRect(s.x, s.y, s.r, s.r)
+      })
+
+      ctx.fillStyle = 'rgba(220,255,200,0.85)'
+      ctx.beginPath(); ctx.arc(120, 70, 28, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = 'rgba(150,200,150,0.3)'
+      ctx.beginPath(); ctx.arc(115, 65, 10, 0, Math.PI * 2); ctx.fill()
+
+      const vx = W * 0.85, vy = H
+      ctx.fillStyle = '#0d2a30'
+      ctx.beginPath()
+      ctx.moveTo(vx - 120, vy); ctx.lineTo(vx - 60, H * 0.45)
+      ctx.lineTo(vx, H * 0.35); ctx.lineTo(vx + 60, H * 0.45)
+      ctx.lineTo(vx + 120, vy); ctx.closePath(); ctx.fill()
+      const glowAlpha = 0.3 + Math.sin(lavaFrame * 0.08) * 0.15
+      ctx.fillStyle = `rgba(255,100,20,${glowAlpha})`
+      ctx.beginPath(); ctx.ellipse(vx, H * 0.35 + 5, 25, 10, 0, 0, Math.PI * 2); ctx.fill()
+      ctx.fillStyle = `rgba(255,80,10,${glowAlpha * 0.6})`
+      ctx.fillRect(vx - 4, H * 0.35 + 5, 8, 35)
+      ctx.fillRect(vx + 15, H * 0.35 + 15, 5, 25)
+      const smokeAlpha = 0.15 + Math.sin(lavaFrame * 0.05) * 0.08
+      ctx.fillStyle = `rgba(80,80,60,${smokeAlpha})`
+      ctx.beginPath(); ctx.arc(vx - 10, H * 0.35 - 35 + Math.sin(lavaFrame * 0.03) * 5, 18, 0, Math.PI * 2); ctx.fill()
+      ctx.beginPath(); ctx.arc(vx + 5, H * 0.35 - 55 + Math.sin(lavaFrame * 0.04) * 5, 14, 0, Math.PI * 2); ctx.fill()
+      ctx.beginPath(); ctx.arc(vx - 5, H * 0.35 - 75 + Math.sin(lavaFrame * 0.035) * 5, 10, 0, Math.PI * 2); ctx.fill()
+
+      ctx.fillStyle = 'rgba(10,30,15,0.8)'
+      ptero.forEach(p => {
+        ctx.beginPath()
+        ctx.moveTo(p.x, p.y)
+        ctx.lineTo(p.x - 20, p.y + 8); ctx.lineTo(p.x - 8, p.y + 4)
+        ctx.lineTo(p.x, p.y + 10)
+        ctx.lineTo(p.x + 8, p.y + 4); ctx.lineTo(p.x + 20, p.y + 8)
+        ctx.closePath(); ctx.fill()
+      })
+
+      ctx.fillStyle = '#0d2a30'
+      ctx.beginPath()
+      ctx.moveTo(0, H); ctx.lineTo(0, H * 0.5)
+      ctx.lineTo(80, H * 0.46); ctx.lineTo(160, H * 0.53)
+      ctx.lineTo(240, H * 0.44); ctx.lineTo(320, H * 0.48)
+      ctx.lineTo(400, H * 0.42); ctx.lineTo(500, H * 0.46)
+      ctx.lineTo(560, H * 0.43); ctx.lineTo(580, H)
+      ctx.closePath(); ctx.fill()
+
+      ;[60, 130, 200, 580].forEach(x => drawTree(x, 80, '#0d3530'))
+
+      const fgColor = '#0a2228'
+      ctx.fillStyle = fgColor
+      ctx.fillRect(0, H * 0.72, 40, H * 0.28)
+      ctx.beginPath(); ctx.moveTo(20, H * 0.4); ctx.lineTo(-20, H * 0.74); ctx.lineTo(60, H * 0.74); ctx.closePath(); ctx.fill()
+      ctx.beginPath(); ctx.moveTo(20, H * 0.5); ctx.lineTo(-10, H * 0.74); ctx.lineTo(50, H * 0.74); ctx.closePath(); ctx.fill()
+      ctx.fillRect(W - 40, H * 0.74, 40, H * 0.26)
+      ctx.beginPath(); ctx.moveTo(W - 20, H * 0.43); ctx.lineTo(W - 60, H * 0.76); ctx.lineTo(W + 20, H * 0.76); ctx.closePath(); ctx.fill()
+
+      ;[100, 180, W - 200, W - 120].forEach(x => drawFern(x, H * 0.93, fgColor))
+
+      ctx.fillStyle = 'rgba(20,60,60,0.3)'
+      ctx.fillRect(0, H * 0.65, W, H * 0.35)
+    }
+
+    function loop() {
+      lavaFrame++
+      ptero.forEach(p => { p.x -= 1.5; if (p.x < -50) p.x = canvas!.width + 50 })
+      draw()
+      animId = requestAnimationFrame(loop)
     }
 
     init()
     window.addEventListener('resize', init)
+    loop()
+
     return () => {
       window.removeEventListener('resize', init)
       cancelAnimationFrame(animId)
