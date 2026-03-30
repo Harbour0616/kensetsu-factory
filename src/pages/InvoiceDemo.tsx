@@ -5,6 +5,7 @@ export default function InvoiceDemo() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
+  const [fileType, setFileType] = useState<string | null>(null)
   const [fileData, setFileData] = useState<{ base64: string; mediaType: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<OcrResult | null>(null)
@@ -25,6 +26,7 @@ export default function InvoiceDemo() {
     reader.onload = () => {
       const dataUrl = reader.result as string
       setPreview(dataUrl)
+      setFileType(file.type)
       setFileData({ base64: dataUrl.split(',')[1], mediaType: file.type })
     }
     reader.readAsDataURL(file)
@@ -137,11 +139,19 @@ export default function InvoiceDemo() {
             /* Preview + Scan button */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1a14', border: '1px solid #1a3a2a', marginBottom: 16 }}>
-                <img src={preview} alt="プレビュー" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                {fileType === 'application/pdf' ? (
+                  <iframe
+                    src={preview ?? ''}
+                    style={{ width: '100%', height: '100%', border: 'none', minHeight: 400 }}
+                    title="PDF プレビュー"
+                  />
+                ) : (
+                  <img src={preview ?? ''} alt="プレビュー" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                )}
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button
-                  onClick={() => { setPreview(null); setFileData(null); setResult(null); setError(null) }}
+                  onClick={() => { setPreview(null); setFileType(null); setFileData(null); setResult(null); setError(null) }}
                   style={{
                     fontFamily: "'DotGothic16',monospace", fontSize: 11, color: '#6effc4', background: 'transparent',
                     border: '1px solid #2a4a3a', padding: '12px 20px', cursor: 'pointer', flexShrink: 0,
