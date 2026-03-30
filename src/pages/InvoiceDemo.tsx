@@ -32,7 +32,7 @@ export default function InvoiceDemo() {
         const arrayBuffer = await file.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
         const page = await pdf.getPage(1)
-        const viewport = page.getViewport({ scale: 2.0 })
+        const viewport = page.getViewport({ scale: 1.2 })
         const canvas = document.createElement('canvas')
         canvas.width = viewport.width
         canvas.height = viewport.height
@@ -163,7 +163,7 @@ export default function InvoiceDemo() {
             /* Preview + Scan button */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1a14', border: '1px solid #1a3a2a', marginBottom: 16 }}>
-                <img src={preview ?? ''} alt="プレビュー" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                <img src={preview ?? ''} alt="プレビュー" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button
@@ -222,11 +222,9 @@ export default function InvoiceDemo() {
               </h2>
               <ResultCard icon="🏢" label="取引先名" value={result.vendor} />
               <ResultCard icon="💰" label="請求金額" value={result.amount} />
-              <ResultCard icon="📅" label="請求日" value={result.date} />
-              <ResultCard icon="🏦" label="振込先" value={result.bankAccount} />
-              {result.raw && result.raw !== JSON.stringify({ vendor: result.vendor, amount: result.amount, date: result.date, bankAccount: result.bankAccount }) && (
-                <ResultCard icon="📝" label="その他備考" value={result.raw.replace(/\{[\s\S]*\}/, '').trim() || 'なし'} />
-              )}
+              <ResultCard icon="📅" label="請求日・支払期日" value={result.date} />
+              <ResultCard icon="🏗" label="工事名" value={result.constructionName} />
+              <ResultCard icon="📋" label="工事内容" value={result.constructionItems} />
             </div>
           ) : (
             /* Empty state */

@@ -2,8 +2,8 @@ export interface OcrResult {
   vendor: string
   amount: string
   date: string
-  bankAccount: string
-  raw: string
+  constructionName: string
+  constructionItems: string
 }
 
 export async function scanInvoice(base64: string, mediaType: string): Promise<OcrResult> {
@@ -40,11 +40,18 @@ export async function scanInvoice(base64: string, mediaType: string): Promise<Oc
               text: `この請求書画像から以下の情報を読み取ってJSON形式で返してください。
 読み取れない項目は "不明" としてください。
 
+- vendor: 請求書の宛先（「御中」の前の会社名）
+- amount: 税込合計金額
+- date: 請求日と支払期日（例: "請求日：2026/03/31 / 支払期日：2026/04/30"）
+- constructionName: 「工事名：」の後に書かれたテキスト
+- constructionItems: 明細テーブルの「品目・工事内容」列の項目を箇条書き（例: "・外壁塗装工事（A棟）\\n・防水シート施工\\n・足場設置・解体"）
+
 {
-  "vendor": "取引先名（請求元の会社名）",
-  "amount": "請求金額（税込）",
-  "date": "請求日（YYYY/MM/DD）",
-  "bankAccount": "振込先口座情報"
+  "vendor": "株式会社ティラノ工務店",
+  "amount": "1,650,000",
+  "date": "請求日：2026/03/31 / 支払期日：2026/04/30",
+  "constructionName": "横浜市港北区A棟外壁改修工事",
+  "constructionItems": "・外壁塗装工事（A棟）\\n・防水シート施工\\n・足場設置・解体"
 }
 
 JSONのみ返してください。説明文は不要です。`,
@@ -66,7 +73,7 @@ JSONのみ返してください。説明文は不要です。`,
   // Extract JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/)
   if (!jsonMatch) {
-    return { vendor: '不明', amount: '不明', date: '不明', bankAccount: '不明', raw: text }
+    return { vendor: '不明', amount: '不明', date: '不明', constructionName: '不明', constructionItems: '不明' }
   }
 
   const parsed = JSON.parse(jsonMatch[0])
@@ -74,7 +81,7 @@ JSONのみ返してください。説明文は不要です。`,
     vendor: parsed.vendor || '不明',
     amount: parsed.amount || '不明',
     date: parsed.date || '不明',
-    bankAccount: parsed.bankAccount || '不明',
-    raw: text,
+    constructionName: parsed.constructionName || '不明',
+    constructionItems: parsed.constructionItems || '不明',
   }
 }
