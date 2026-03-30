@@ -2,7 +2,10 @@ import { useState, useCallback, useRef } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import { scanInvoice, type OcrResult } from '../lib/ocr'
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.mjs',
+  import.meta.url
+).toString()
 
 export default function InvoiceDemo() {
   const fileRef = useRef<HTMLInputElement>(null)
