@@ -48,14 +48,14 @@ const bubbleData: [number, number, string, string][] = [
 
 // ===== Dino Config =====
 const patrolRoute = [
-  { x: 360, y: 400 },
-  { x: 480, y: 455 },
-  { x: 600, y: 500 },
-  { x: 720, y: 455 },
-  { x: 850, y: 405 },
-  { x: 720, y: 455 },
-  { x: 600, y: 500 },
-  { x: 480, y: 455 },
+  { x: 360, y: 340 },
+  { x: 480, y: 395 },
+  { x: 600, y: 450 },
+  { x: 720, y: 395 },
+  { x: 850, y: 345 },
+  { x: 720, y: 395 },
+  { x: 600, y: 450 },
+  { x: 480, y: 395 },
 ]
 
 const machineTargets: Record<string, { x: number; y: number }> = {
@@ -278,10 +278,10 @@ export default function App() {
     if (!svg) return
 
     const state = {
-      x: 360, y: 400,
-      targetX: 360, targetY: 400,
+      x: 360, y: 340,
+      targetX: 360, targetY: 340,
       moving: false,
-      speed: 2.5,
+      speed: 1.2,
       frameCount: 0,
       locked: false,
     }
@@ -557,16 +557,16 @@ export default function App() {
             <polygon points="490,588 545,561 710,642 655,669" fill="#4a2e15" stroke="#3a1e0e" strokeWidth="1" />
             <polygon points="655,669 710,642 875,534 930,507" fill="#6b4423" stroke="#3a1e0e" strokeWidth="1" />
 
-            {/* Chimney */}
-            <rect x="895" y="120" width="22" height="90" fill="#1a2e1e" stroke="#2a4a2e" strokeWidth="1.5" />
-            <ellipse cx="906" cy="118" rx="13" ry="6" fill="#243826" stroke="#3a5a3a" strokeWidth="1" />
-            <circle cx="906" cy="100" r="8" fill="#2a4a3a" opacity="0.5">
-              <animate attributeName="cy" values="100;80;60" dur="2.5s" repeatCount="indefinite" />
+            {/* Chimney (on D machine block) */}
+            <rect x="830" y="148" width="22" height="80" fill="#1a2e1e" stroke="#2a4a2e" strokeWidth="1.5" />
+            <ellipse cx="841" cy="146" rx="13" ry="6" fill="#243826" stroke="#3a5a3a" strokeWidth="1" />
+            <circle cx="841" cy="128" r="8" fill="#2a4a3a" opacity="0.5">
+              <animate attributeName="cy" values="128;108;88" dur="2.5s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.5;0.3;0" dur="2.5s" repeatCount="indefinite" />
               <animate attributeName="r" values="8;12;16" dur="2.5s" repeatCount="indefinite" />
             </circle>
-            <circle cx="910" cy="88" r="6" fill="#2a4a3a" opacity="0.4">
-              <animate attributeName="cy" values="88;68;48" dur="3s" begin="0.8s" repeatCount="indefinite" />
+            <circle cx="845" cy="116" r="6" fill="#2a4a3a" opacity="0.4">
+              <animate attributeName="cy" values="116;96;76" dur="3s" begin="0.8s" repeatCount="indefinite" />
               <animate attributeName="opacity" values="0.4;0.2;0" dur="3s" begin="0.8s" repeatCount="indefinite" />
               <animate attributeName="r" values="6;10;14" dur="3s" begin="0.8s" repeatCount="indefinite" />
             </circle>
@@ -579,7 +579,7 @@ export default function App() {
               <polygon points="545,127 600,154 600,234 545,207" fill="#3d2a0f" />
               <polygon className="m-top" points="600,100 655,127 600,154 545,127" fill="url(#grass-grid)" filter="url(#glow)" />
               <text x="600" y="128" textAnchor="middle" fontSize="28" filter="url(#glow)">🧾</text>
-              <text x="600" y="112" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">請求書スキャナー</text>
+              <text className="m-label" x="600" y="112" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">請求書スキャナー</text>
               <rect x="644" y="102" width="9" height="9" fill="#6effc4" filter="url(#glow)">
                 <animate attributeName="opacity" values="1;0;1" dur="1s" calcMode="discrete" repeatCount="indefinite" />
               </rect>
@@ -591,7 +591,7 @@ export default function App() {
               <polygon points="655,181 710,208 710,288 655,261" fill="#3d2a0f" />
               <polygon className="m-top" points="710,154 765,181 710,208 655,181" fill="url(#grass-grid)" filter="url(#glow)" />
               <text x="710" y="182" textAnchor="middle" fontSize="28" filter="url(#glow)">📱</text>
-              <text x="710" y="166" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">レシートスキャン</text>
+              <text className="m-label" x="710" y="166" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">レシートスキャン</text>
               <rect x="754" y="156" width="9" height="9" fill="#6effc4" filter="url(#glow)">
                 <animate attributeName="opacity" values="1;0;1" dur="0.8s" calcMode="discrete" begin="0.3s" repeatCount="indefinite" />
               </rect>
@@ -603,7 +603,7 @@ export default function App() {
               <polygon points="600,208 655,235 655,315 600,288" fill="#3d2a0f" />
               <polygon className="m-top" points="655,181 710,208 655,235 600,208" fill="url(#grass-grid)" filter="url(#glow)" />
               <text x="655" y="209" textAnchor="middle" fontSize="28" filter="url(#glow)">📊</text>
-              <text x="655" y="193" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">粗利マネージャー</text>
+              <text className="m-label" x="655" y="193" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="11" fill="#9effd8">粗利マネージャー</text>
               <rect x="699" y="183" width="9" height="9" fill="#6effc4" filter="url(#glow)">
                 <animate attributeName="opacity" values="1;0;1" dur="1.2s" calcMode="discrete" begin="0.6s" repeatCount="indefinite" />
               </rect>
@@ -615,7 +615,7 @@ export default function App() {
               <polygon points="765,255 820,282 820,342 765,315" fill="#333333" />
               <polygon className="m-top" points="820,228 875,255 820,282 765,255" fill="#666666" />
               <text x="820" y="256" textAnchor="middle" fontSize="26">🏦</text>
-              <text x="820" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">資金繰りナビ</text>
+              <text className="m-label" x="820" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">資金繰りナビ</text>
               <text x="852" y="235" fontSize="14">🔒</text>
             </g>
 
@@ -625,7 +625,7 @@ export default function App() {
               <polygon points="710,282 765,309 765,369 710,342" fill="#333333" />
               <polygon className="m-top" points="765,255 820,282 765,309 710,282" fill="#666666" />
               <text x="765" y="283" textAnchor="middle" fontSize="26">📋</text>
-              <text x="765" y="267" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">工事台帳</text>
+              <text className="m-label" x="765" y="267" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">工事台帳</text>
               <text x="797" y="262" fontSize="14">🔒</text>
             </g>
 
@@ -635,7 +635,7 @@ export default function App() {
               <polygon points="435,255 490,282 490,342 435,315" fill="#333333" />
               <polygon className="m-top" points="490,228 545,255 490,282 435,255" fill="#666666" />
               <text x="490" y="256" textAnchor="middle" fontSize="26">👷</text>
-              <text x="490" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">労務費日報</text>
+              <text className="m-label" x="490" y="240" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">労務費日報</text>
               <text x="522" y="235" fontSize="14">🔒</text>
             </g>
 
@@ -645,7 +645,7 @@ export default function App() {
               <polygon points="545,309 600,336 600,396 545,369" fill="#333333" />
               <polygon className="m-top" points="600,282 655,309 600,336 545,309" fill="#666666" />
               <text x="600" y="310" textAnchor="middle" fontSize="26">💳</text>
-              <text x="600" y="294" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">クレカ照合</text>
+              <text className="m-label" x="600" y="294" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">クレカ照合</text>
               <text x="632" y="289" fontSize="14">🔒</text>
             </g>
 
@@ -655,7 +655,7 @@ export default function App() {
               <polygon points="490,336 545,363 545,423 490,396" fill="#333333" />
               <polygon className="m-top" points="545,309 600,336 545,363 490,336" fill="#666666" />
               <text x="545" y="337" textAnchor="middle" fontSize="26">🏗️</text>
-              <text x="545" y="321" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">現場管理</text>
+              <text className="m-label" x="545" y="321" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#999999">現場管理</text>
               <text x="577" y="316" fontSize="14">🔒</text>
             </g>
 
@@ -665,11 +665,9 @@ export default function App() {
               <polygon points="655,363 710,390 710,450 655,423" fill="#333333" />
               <polygon className="m-top" points="710,336 765,363 710,390 655,363" fill="#666666" />
               <text x="710" y="364" textAnchor="middle" fontSize="26">⚙️</text>
-              <text x="710" y="348" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#888888">開発中...</text>
+              <text className="m-label" x="710" y="348" textAnchor="middle" fontFamily="'DotGothic16',monospace" fontSize="10" fill="#888888">開発中...</text>
             </g>
 
-            {/* Mascots (🦖 is animated via JS, 🦕 stays static) */}
-            <text x="960" y="460" fontSize="38" opacity="0.55">🦕</text>
 
             {/* Factory Name Plate */}
             <rect x="460" y="510" width="280" height="32" fill="#0a1a12" stroke="#6effc4" strokeWidth="2" />
