@@ -10,16 +10,26 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 export default function InvoiceDemo() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [fileData, setFileData] = useState<{ base64: string; mediaType: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<OcrResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const runScan = useCallback(async (base64: string, mediaType: string) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await scanInvoice(base64, mediaType)
+      setResult(res)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'エラーが発生しました')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   const handleFile = useCallback(async (file: File) => {
     setError(null)
     setResult(null)
-    setFileData(null)
 
     const validTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf']
     if (!validTypes.includes(file.type)) {
@@ -32,28 +42,14 @@ export default function InvoiceDemo() {
         const arrayBuffer = await file.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
         const page = await pdf.getPage(1)
-
-        // まずscale=1でビューポートサイズを取得
-        const viewport1 = page.getViewport({ scale: 1.0 })
-
-        // 左カラムの表示可能サイズを計算（padding 28px×2, ボタン行約60px を除いた高さ）
-        const containerW = window.innerWidth / 2 - 56
-        const containerH = window.innerHeight - 60 - 60 - 56  // header + buttons + padding
-
-        // 縦横どちらに合わせるかを判断してscaleを決定
-        const scaleW = containerW / viewport1.width
-        const scaleH = containerH / viewport1.height
-        const scale = Math.min(scaleW, scaleH, 1.5)  // 最大1.5倍まで
-
-        const viewport = page.getViewport({ scale })
+        const viewport = page.getViewport({ scale: 1.5 })
         const canvas = document.createElement('canvas')
         canvas.width = viewport.width
         canvas.height = viewport.height
         const context = canvas.getContext('2d')!
         await page.render({ canvasContext: context, viewport, canvas }).promise
         const pngDataUrl = canvas.toDataURL('image/png')
-        setPreview(pngDataUrl)
-        setFileData({ base64: pngDataUrl.split(',')[1], mediaType: 'image/png' })
+        runScan(pngDataUrl.split(',')[1], 'image/png')
       } catch {
         setError('PDFの読み込みに失敗しました')
       }
@@ -63,25 +59,10 @@ export default function InvoiceDemo() {
     const reader = new FileReader()
     reader.onload = () => {
       const dataUrl = reader.result as string
-      setPreview(dataUrl)
-      setFileData({ base64: dataUrl.split(',')[1], mediaType: file.type })
+      runScan(dataUrl.split(',')[1], file.type)
     }
     reader.readAsDataURL(file)
-  }, [])
-
-  const startScan = useCallback(async () => {
-    if (!fileData) return
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await scanInvoice(fileData.base64, fileData.mediaType)
-      setResult(res)
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'エラーが発生しました')
-    } finally {
-      setLoading(false)
-    }
-  }, [fileData])
+  }, [runScan])
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -95,8 +76,14 @@ export default function InvoiceDemo() {
     if (file) handleFile(file)
   }, [handleFile])
 
+  const reset = useCallback(() => {
+    setResult(null)
+    setError(null)
+    setLoading(false)
+  }, [])
+
   return (
-    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', background: '#06100e', overflow: 'hidden' }}>
+    <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', background: '#06100e' }}>
       {/* Header */}
       <header style={{
         flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -119,14 +106,59 @@ export default function InvoiceDemo() {
         </button>
       </header>
 
-      {/* Main 2-column */}
-      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {/* Left: Upload */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 28, borderRight: '1px solid #1a3a2a', overflow: 'auto' }}>
-          {!preview ? (
-            <>
-            {/* Sample download */}
-            <div style={{ marginBottom: 16, textAlign: 'center' }}>
+      {/* Main: 1カラム中央寄せ */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        padding: '0 40px', maxWidth: 640, margin: '0 auto', width: '100%',
+        overflow: 'auto',
+      }}>
+        {error && (
+          <div style={{ border: '2px solid #ff6b6b', background: '#1a0a0a', padding: 16, marginBottom: 20, fontFamily: "'DotGothic16',monospace", fontSize: 12, color: '#ff6b6b', width: '100%' }}>
+            ⚠ {error}
+          </div>
+        )}
+
+        {loading ? (
+          /* Loading */
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <div key={i} style={{
+                  width: 14, height: 14, background: '#6effc4',
+                  animation: `blink 1s step-end infinite`, animationDelay: `${i * 0.2}s`,
+                }} />
+              ))}
+            </div>
+            <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#6effc4' }}>
+              AIが読み取り中...
+            </p>
+          </div>
+        ) : result ? (
+          /* Results */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+            <h2 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: '#f9c74f', marginBottom: 4 }}>
+              ▶ 読取結果
+            </h2>
+            <ResultCard icon="🏢" label="取引先名" value={result.vendor} />
+            <ResultCard icon="💰" label="請求金額" value={result.amount} />
+            <ResultCard icon="📅" label="請求日・支払期日" value={result.date} />
+            <ResultCard icon="🏗" label="工事名" value={result.constructionName} />
+            <ResultCard icon="📋" label="工事内容" value={result.constructionItems} />
+            <button
+              onClick={reset}
+              style={{
+                fontFamily: "'DotGothic16',monospace", fontSize: 13, color: '#6effc4', background: 'transparent',
+                border: '1px solid #3a7a5a', padding: '14px 20px', cursor: 'pointer', marginTop: 8,
+              }}
+            >
+              もう一度試す
+            </button>
+          </div>
+        ) : (
+          /* Initial: Download + Drop zone */
+          <>
+            <div style={{ marginBottom: 24, textAlign: 'center' }}>
               <a
                 href="/jura_invoice_sample.pdf"
                 download="jura_invoice_sample.pdf"
@@ -143,22 +175,22 @@ export default function InvoiceDemo() {
                 ← まずこれをダウンロードして、下のエリアにドロップしてみてください
               </p>
             </div>
-            {/* Drop Zone */}
             <div
               onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
               onDrop={onDrop}
               onClick={() => fileRef.current?.click()}
               style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                width: '100%', height: 200, display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
                 border: `2px dashed ${dragging ? '#6effc4' : '#2a4a3a'}`, background: dragging ? '#0a2018' : '#0a1a14',
                 cursor: 'pointer', transition: 'all 0.3s',
                 boxShadow: dragging ? '0 0 24px rgba(110,255,196,0.3)' : 'none',
               }}
             >
               <input ref={fileRef} type="file" accept="image/*,application/pdf" onChange={onFileChange} style={{ display: 'none' }} />
-              <div style={{ fontSize: 60, marginBottom: 20 }}>🧾</div>
-              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#6effc4', marginBottom: 12 }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🧾</div>
+              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#6effc4', marginBottom: 10 }}>
                 請求書をドロップ
               </p>
               <button
@@ -171,83 +203,8 @@ export default function InvoiceDemo() {
                 またはファイルを選択
               </button>
             </div>
-            </>
-          ) : (
-            /* Preview + Scan button */
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1a14', border: '1px solid #1a3a2a', marginBottom: 16 }}>
-                <img src={preview ?? ''} alt="プレビュー" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button
-                  onClick={() => { setPreview(null); setFileData(null); setResult(null); setError(null) }}
-                  style={{
-                    fontFamily: "'DotGothic16',monospace", fontSize: 11, color: '#6effc4', background: 'transparent',
-                    border: '1px solid #2a4a3a', padding: '12px 20px', cursor: 'pointer', flexShrink: 0,
-                  }}
-                >
-                  別のファイル
-                </button>
-                <button
-                  onClick={startScan}
-                  disabled={loading}
-                  style={{
-                    flex: 1, fontFamily: "'Press Start 2P',monospace", fontSize: 11,
-                    color: loading ? '#4a9e7a' : '#0a1a14', background: loading ? '#1a3a2a' : '#6effc4',
-                    border: 'none', padding: '14px 20px', cursor: loading ? 'default' : 'pointer',
-                  }}
-                >
-                  {loading ? '読み取り中...' : '▶ 読み取り開始'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Results */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 28, overflow: 'auto' }}>
-          {error && (
-            <div style={{ border: '2px solid #ff6b6b', background: '#1a0a0a', padding: 16, marginBottom: 20, fontFamily: "'DotGothic16',monospace", fontSize: 12, color: '#ff6b6b' }}>
-              ⚠ {error}
-            </div>
-          )}
-
-          {loading ? (
-            /* Loading */
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-                {[0, 1, 2, 3, 4].map(i => (
-                  <div key={i} style={{
-                    width: 14, height: 14, background: '#6effc4',
-                    animation: `blink 1s step-end infinite`, animationDelay: `${i * 0.2}s`,
-                  }} />
-                ))}
-              </div>
-              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#6effc4' }}>
-                AIが読み取り中...
-              </p>
-            </div>
-          ) : result ? (
-            /* Results */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <h2 style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 10, color: '#f9c74f', marginBottom: 4 }}>
-                ▶ 読取結果
-              </h2>
-              <ResultCard icon="🏢" label="取引先名" value={result.vendor} />
-              <ResultCard icon="💰" label="請求金額" value={result.amount} />
-              <ResultCard icon="📅" label="請求日・支払期日" value={result.date} />
-              <ResultCard icon="🏗" label="工事名" value={result.constructionName} />
-              <ResultCard icon="📋" label="工事内容" value={result.constructionItems} />
-            </div>
-          ) : (
-            /* Empty state */
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 14, color: '#334433' }}>
-                ← 請求書をアップロードしてください
-              </p>
-            </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </div>
   )
