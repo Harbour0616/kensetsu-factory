@@ -44,14 +44,14 @@ export async function scanInvoice(base64: string, mediaType: string): Promise<Oc
 - amount: 税込合計金額
 - date: 請求日と支払期日（例: "請求日：2026/03/31 / 支払期日：2026/04/30"）
 - constructionName: 「工事名：」の後に書かれたテキスト
-- constructionItems: 明細テーブルの「品目・工事内容」列の項目を箇条書き（例: "・外壁塗装工事（A棟）\\n・防水シート施工\\n・足場設置・解体"）
+- constructionItems: 明細テーブルの各行を「品目名 / 数量 単位 / 単価 / 金額」の形式で1行ずつ箇条書き
 
 {
   "vendor": "株式会社ティラノ工務店",
   "amount": "1,650,000",
   "date": "請求日：2026/03/31 / 支払期日：2026/04/30",
   "constructionName": "横浜市港北区A棟外壁改修工事",
-  "constructionItems": "・外壁塗装工事（A棟）\\n・防水シート施工\\n・足場設置・解体"
+  "constructionItems": "・外壁塗装工事（A棟） / 1式 / 800,000円 / 800,000円\\n・防水シート施工 / 250m² / 2,200円 / 550,000円\\n・足場設置・解体 / 1式 / 150,000円 / 150,000円"
 }
 
 JSONのみ返してください。説明文は不要です。`,
