@@ -317,7 +317,7 @@ export default function InvoiceDemo() {
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* 左：請求書プレビュー */}
           <div style={{
-            flex: 1, background: '#fff', color: '#111', padding: '32px 28px',
+            flex: '0 0 50%', background: '#fff', color: '#111', padding: '32px 28px',
             fontFamily: 'sans-serif', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 8,
             overflow: 'auto',
           }}>
@@ -366,7 +366,7 @@ export default function InvoiceDemo() {
 
           {/* 右：フォーム */}
           <div style={{
-            width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column',
+            flex: '0 0 50%', display: 'flex', flexDirection: 'column',
             padding: 24, borderLeft: '1px solid #1a3a2a', overflow: 'auto', gap: 16,
           }}>
             <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#6effc4', marginBottom: 8 }}>
