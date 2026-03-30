@@ -32,7 +32,20 @@ export default function InvoiceDemo() {
         const arrayBuffer = await file.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
         const page = await pdf.getPage(1)
-        const viewport = page.getViewport({ scale: 1.2 })
+
+        // まずscale=1でビューポートサイズを取得
+        const viewport1 = page.getViewport({ scale: 1.0 })
+
+        // 左カラムの表示可能サイズを計算（padding 28px×2, ボタン行約60px を除いた高さ）
+        const containerW = window.innerWidth / 2 - 56
+        const containerH = window.innerHeight - 60 - 60 - 56  // header + buttons + padding
+
+        // 縦横どちらに合わせるかを判断してscaleを決定
+        const scaleW = containerW / viewport1.width
+        const scaleH = containerH / viewport1.height
+        const scale = Math.min(scaleW, scaleH, 1.5)  // 最大1.5倍まで
+
+        const viewport = page.getViewport({ scale })
         const canvas = document.createElement('canvas')
         canvas.width = viewport.width
         canvas.height = viewport.height
@@ -162,8 +175,8 @@ export default function InvoiceDemo() {
           ) : (
             /* Preview + Scan button */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1a14', border: '1px solid #1a3a2a', marginBottom: 16 }}>
-                <img src={preview ?? ''} alt="プレビュー" style={{ width: '100%', height: 'auto', objectFit: 'contain' }} />
+              <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1a14', border: '1px solid #1a3a2a', marginBottom: 16 }}>
+                <img src={preview ?? ''} alt="プレビュー" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button
