@@ -145,45 +145,70 @@ export default function InvoiceDemo() {
           flex: 1, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 24, padding: 40,
         }}>
-          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: '#6effc4', marginBottom: 16 }}>
+          <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 16, color: '#6effc4',
+            textShadow: '0 0 20px #6effc4', marginBottom: 48, letterSpacing: 2 }}>
             請求書をどうしますか？
           </p>
-          <div style={{ display: 'flex', gap: 24 }}>
+          <div style={{ display: 'flex', gap: 40 }}>
             <div
               onClick={() => setPhase('scan')}
               style={{
-                width: 260, padding: 32, border: '2px solid #2a4a3a', background: '#0a1a14',
-                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+                width: 340, padding: '48px 36px', border: '2px solid #2a4a3a', background: '#0a1a14',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#6effc4' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a4a3a' }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = '#6effc4'
+                e.currentTarget.style.background = '#0d2a1e'
+                e.currentTarget.style.boxShadow = '0 0 32px rgba(110,255,196,0.15)'
+                e.currentTarget.style.transform = 'translateY(-4px)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = '#2a4a3a'
+                e.currentTarget.style.background = '#0a1a14'
+                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
             >
-              <div style={{ fontSize: 48 }}>📥</div>
-              <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#6effc4', textAlign: 'center', lineHeight: 1.8 }}>
+              <div style={{ fontSize: 72, marginBottom: 8 }}>📥</div>
+              <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: '#6effc4', textAlign: 'center', lineHeight: 2.2 }}>
                 既存の請求書を<br />読み込む
               </p>
-              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 11, color: '#4a8a6a', textAlign: 'center', lineHeight: 1.8 }}>
-                エクセルや手書きの<br />請求書をアップロード<br />するだけで自動読み取り
+              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 13, color: '#4a8a6a', textAlign: 'center', lineHeight: 2 }}>
+                エクセル・手書き・既存フォーマット<br />
+                アップロードするだけで<br />
+                自動でデータ化されます
               </p>
             </div>
 
             <div
               onClick={() => setPhase('create')}
               style={{
-                width: 260, padding: 32, border: '2px solid #2a4a3a', background: '#0a1a14',
-                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+                width: 340, padding: '48px 36px', border: '2px solid #2a4a3a', background: '#0a1a14',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#6effc4' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a4a3a' }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = '#6effc4'
+                e.currentTarget.style.background = '#0d2a1e'
+                e.currentTarget.style.boxShadow = '0 0 32px rgba(110,255,196,0.15)'
+                e.currentTarget.style.transform = 'translateY(-4px)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = '#2a4a3a'
+                e.currentTarget.style.background = '#0a1a14'
+                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.transform = 'translateY(0)'
+              }}
             >
-              <div style={{ fontSize: 48 }}>📝</div>
-              <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 9, color: '#6effc4', textAlign: 'center', lineHeight: 1.8 }}>
+              <div style={{ fontSize: 72, marginBottom: 8 }}>📝</div>
+              <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 11, color: '#6effc4', textAlign: 'center', lineHeight: 2.2 }}>
                 請求書を作成して<br />粗利に反映
               </p>
-              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 11, color: '#4a8a6a', textAlign: 'center', lineHeight: 1.8 }}>
-                ここで作った請求書が<br />粗利マネージャーに<br />自動で連携される
+              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 13, color: '#4a8a6a', textAlign: 'center', lineHeight: 2 }}>
+                ここで作った請求書が<br />
+                そのまま粗利マネージャーに<br />
+                自動で連携されます
               </p>
             </div>
           </div>
