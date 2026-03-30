@@ -85,7 +85,26 @@ export default function InvoiceDemo() {
         {/* Left: Upload */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 28, borderRight: '1px solid #1a3a2a', overflow: 'auto' }}>
           {!preview ? (
-            /* Drop Zone */
+            <>
+            {/* Sample download */}
+            <div style={{ marginBottom: 16, textAlign: 'center' }}>
+              <a
+                href="/jura_invoice_sample.pdf"
+                download="jura_invoice_sample.pdf"
+                style={{
+                  display: 'inline-block', fontFamily: "'DotGothic16',monospace", fontSize: 13,
+                  color: '#0a1a14', background: '#6effc4', padding: '10px 24px',
+                  border: '2px solid #3a7a5a', textDecoration: 'none', cursor: 'pointer',
+                  boxShadow: '0 0 12px rgba(110,255,196,0.3)',
+                }}
+              >
+                📄 サンプル請求書をダウンロード
+              </a>
+              <p style={{ fontFamily: "'DotGothic16',monospace", fontSize: 10, color: '#4a8a6a', marginTop: 8 }}>
+                ← まずこれをダウンロードして、下のエリアにドロップしてみてください
+              </p>
+            </div>
+            {/* Drop Zone */}
             <div
               onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
@@ -113,6 +132,7 @@ export default function InvoiceDemo() {
                 またはファイルを選択
               </button>
             </div>
+            </>
           ) : (
             /* Preview + Scan button */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
