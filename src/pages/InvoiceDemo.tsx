@@ -1,17 +1,19 @@
 import { useState, useCallback, useRef } from 'react'
+import * as pdfjsLib from 'pdfjs-dist'
 import { scanInvoice, type OcrResult } from '../lib/ocr'
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs`
 
 export default function InvoiceDemo() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
-  const [fileType, setFileType] = useState<string | null>(null)
   const [fileData, setFileData] = useState<{ base64: string; mediaType: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<OcrResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     setError(null)
     setResult(null)
     setFileData(null)
@@ -22,11 +24,29 @@ export default function InvoiceDemo() {
       return
     }
 
+    if (file.type === 'application/pdf') {
+      try {
+        const arrayBuffer = await file.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+        const page = await pdf.getPage(1)
+        const viewport = page.getViewport({ scale: 2.0 })
+        const canvas = document.createElement('canvas')
+        canvas.width = viewport.width
+        canvas.height = viewport.height
+        await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise
+        const pngDataUrl = canvas.toDataURL('image/png')
+        setPreview(pngDataUrl)
+        setFileData({ base64: pngDataUrl.split(',')[1], mediaType: 'image/png' })
+      } catch {
+        setError('PDFの読み込みに失敗しました')
+      }
+      return
+    }
+
     const reader = new FileReader()
     reader.onload = () => {
       const dataUrl = reader.result as string
       setPreview(dataUrl)
-      setFileType(file.type)
       setFileData({ base64: dataUrl.split(',')[1], mediaType: file.type })
     }
     reader.readAsDataURL(file)
@@ -139,19 +159,11 @@ export default function InvoiceDemo() {
             /* Preview + Scan button */
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a1a14', border: '1px solid #1a3a2a', marginBottom: 16 }}>
-                {fileType === 'application/pdf' ? (
-                  <iframe
-                    src={preview ?? ''}
-                    style={{ width: '100%', height: '100%', border: 'none', minHeight: 400 }}
-                    title="PDF プレビュー"
-                  />
-                ) : (
-                  <img src={preview ?? ''} alt="プレビュー" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                )}
+                <img src={preview ?? ''} alt="プレビュー" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button
-                  onClick={() => { setPreview(null); setFileType(null); setFileData(null); setResult(null); setError(null) }}
+                  onClick={() => { setPreview(null); setFileData(null); setResult(null); setError(null) }}
                   style={{
                     fontFamily: "'DotGothic16',monospace", fontSize: 11, color: '#6effc4', background: 'transparent',
                     border: '1px solid #2a4a3a', padding: '12px 20px', cursor: 'pointer', flexShrink: 0,
