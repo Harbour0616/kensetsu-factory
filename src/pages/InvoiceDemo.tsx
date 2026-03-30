@@ -33,7 +33,8 @@ export default function InvoiceDemo() {
         const canvas = document.createElement('canvas')
         canvas.width = viewport.width
         canvas.height = viewport.height
-        await page.render({ canvasContext: canvas.getContext('2d')!, viewport }).promise
+        const context = canvas.getContext('2d')!
+        await page.render({ canvasContext: context, viewport, canvas }).promise
         const pngDataUrl = canvas.toDataURL('image/png')
         setPreview(pngDataUrl)
         setFileData({ base64: pngDataUrl.split(',')[1], mediaType: 'image/png' })
