@@ -45,9 +45,9 @@ export default function InvoiceDemo() {
     canvas.height = window.innerHeight
 
     const pteros = [
-      { x: window.innerWidth + 100, y: 80,  speed: 1.2, size: 36, flap: 0 },
-      { x: window.innerWidth + 400, y: 140, speed: 0.9, size: 24, flap: 1 },
-      { x: window.innerWidth + 700, y: 60,  speed: 1.5, size: 20, flap: 2 },
+      { x: window.innerWidth + 100, y: 120, speed: 1.2, size: 72, flap: 0 },
+      { x: window.innerWidth + 400, y: 220, speed: 0.9, size: 52, flap: 1 },
+      { x: window.innerWidth + 700, y: 90,  speed: 1.5, size: 44, flap: 2 },
     ]
 
     let animId: number
