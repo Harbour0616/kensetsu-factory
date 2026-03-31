@@ -18,6 +18,7 @@ type Phase = 'top' | 'scan' | 'scan-loading' | 'scan-result' | 'create' | 'creat
 
 export default function InvoiceDemo() {
   const fileRef = useRef<HTMLInputElement>(null)
+  const pteranoRef = useRef<HTMLCanvasElement>(null)
   const [phase, setPhase] = useState<Phase>('top')
   const [dragging, setDragging] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
@@ -31,6 +32,96 @@ export default function InvoiceDemo() {
     constructionItems: '',
   })
   const [createStep, setCreateStep] = useState(0)
+
+  // Pteranodon canvas animation
+  useEffect(() => {
+    if (phase !== 'top') return
+    const canvas = pteranoRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+
+    const pteros = [
+      { x: window.innerWidth + 100, y: 80,  speed: 1.2, size: 36, flap: 0 },
+      { x: window.innerWidth + 400, y: 140, speed: 0.9, size: 24, flap: 1 },
+      { x: window.innerWidth + 700, y: 60,  speed: 1.5, size: 20, flap: 2 },
+    ]
+
+    let animId: number
+    let frame = 0
+
+    const drawPtero = (p: typeof pteros[0]) => {
+      const flapY = Math.sin(frame * 0.12 + p.flap) * p.size * 0.6
+      ctx.fillStyle = 'rgba(110, 255, 196, 0.7)'
+
+      // 胴体
+      ctx.beginPath()
+      ctx.ellipse(p.x, p.y, p.size * 0.8, p.size * 0.25, 0, 0, Math.PI * 2)
+      ctx.fill()
+
+      // 左翼（進行方向と逆）
+      ctx.beginPath()
+      ctx.moveTo(p.x, p.y)
+      ctx.quadraticCurveTo(p.x + p.size * 1.4, p.y - flapY - p.size * 0.3, p.x + p.size * 2.4, p.y - flapY)
+      ctx.quadraticCurveTo(p.x + p.size * 1.4, p.y + p.size * 0.2, p.x, p.y)
+      ctx.fill()
+
+      // 右翼
+      ctx.beginPath()
+      ctx.moveTo(p.x, p.y)
+      ctx.quadraticCurveTo(p.x - p.size * 1.4, p.y - flapY - p.size * 0.3, p.x - p.size * 2.4, p.y - flapY)
+      ctx.quadraticCurveTo(p.x - p.size * 1.4, p.y + p.size * 0.2, p.x, p.y)
+      ctx.fill()
+
+      // くちばし（左向き）
+      ctx.beginPath()
+      ctx.moveTo(p.x - p.size * 0.75, p.y - p.size * 0.08)
+      ctx.lineTo(p.x - p.size * 1.5, p.y)
+      ctx.lineTo(p.x - p.size * 0.75, p.y + p.size * 0.08)
+      ctx.closePath()
+      ctx.fill()
+
+      // 頭のトサカ
+      ctx.beginPath()
+      ctx.moveTo(p.x - p.size * 0.5, p.y - p.size * 0.2)
+      ctx.lineTo(p.x + p.size * 0.3, p.y - p.size * 0.6)
+      ctx.lineTo(p.x + p.size * 0.1, p.y - p.size * 0.2)
+      ctx.closePath()
+      ctx.fill()
+    }
+
+    const loop = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      frame++
+
+      pteros.forEach(p => {
+        p.x -= p.speed
+        if (p.x < -p.size * 3) {
+          p.x = window.innerWidth + 200 + Math.random() * 400
+          p.y = 50 + Math.random() * 180
+        }
+        drawPtero(p)
+      })
+
+      animId = requestAnimationFrame(loop)
+    }
+
+    loop()
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth
+      canvas.height = window.innerHeight
+    }
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      cancelAnimationFrame(animId)
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [phase])
 
   // Create loading animation
   useEffect(() => {
@@ -144,12 +235,23 @@ export default function InvoiceDemo() {
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center', gap: 24, padding: 40,
+          position: 'relative',
         }}>
+          <canvas
+            ref={pteranoRef}
+            style={{
+              position: 'absolute',
+              top: 0, left: 0,
+              width: '100%', height: '100%',
+              pointerEvents: 'none',
+              zIndex: 0,
+            }}
+          />
           <p style={{ fontFamily: "'Press Start 2P',monospace", fontSize: 16, color: '#6effc4',
-            textShadow: '0 0 20px #6effc4', marginBottom: 48, letterSpacing: 2 }}>
+            textShadow: '0 0 20px #6effc4', marginBottom: 48, letterSpacing: 2, zIndex: 1, position: 'relative' }}>
             請求書をどうしますか？
           </p>
-          <div style={{ display: 'flex', gap: 40 }}>
+          <div style={{ display: 'flex', gap: 40, zIndex: 1, position: 'relative' }}>
             <div
               onClick={() => setPhase('scan')}
               style={{
