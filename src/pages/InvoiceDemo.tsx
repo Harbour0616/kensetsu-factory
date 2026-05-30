@@ -54,43 +54,52 @@ export default function InvoiceDemo() {
     let frame = 0
 
     const drawPtero = (p: typeof pteros[0]) => {
-      const flapY = Math.sin(frame * 0.12 + p.flap) * p.size * 0.6
-      ctx.fillStyle = 'rgba(110, 255, 196, 0.7)'
+      const s = p.size
+      const f = Math.sin(frame * 0.12 + p.flap) * s * 0.5 // 羽ばたきオフセット
+      ctx.save()
+      ctx.translate(p.x, p.y) // 進行方向は左（-x）。くちばしは左、トサカは後方=右上へ
 
-      // 胴体
+      // ---- 翼（左右対称・後退した膜翼＋尖った翼指） ----
+      ctx.fillStyle = 'rgba(110, 255, 196, 0.72)'
+      const wing = (sy: number) => {
+        ctx.beginPath()
+        ctx.moveTo(-s * 0.18, sy * s * 0.05)                                  // 肩（前縁付け根）
+        ctx.quadraticCurveTo(-s * 0.02, sy * s * 1.05,                        // 前縁の張り
+                             s * 0.62, sy * (s * 1.7) + sy * f)               // 翼指の先端（羽ばたきで上下）
+        ctx.quadraticCurveTo(s * 0.12, sy * s * 0.5,                          // 後縁を内側へえぐる
+                             s * 0.5, sy * s * 0.05)                          // 後縁付け根
+        ctx.closePath()
+        ctx.fill()
+      }
+      wing(-1) // 上翼
+      wing(1)  // 下翼
+
+      // ---- 胴体〜尾（細い紡錘形） ----
+      ctx.fillStyle = 'rgba(110, 255, 196, 0.82)'
       ctx.beginPath()
-      ctx.ellipse(p.x, p.y, p.size * 0.8, p.size * 0.25, 0, 0, Math.PI * 2)
+      ctx.moveTo(-s * 0.82, 0)
+      ctx.quadraticCurveTo(0, -s * 0.19, s * 1.05, -s * 0.035)
+      ctx.quadraticCurveTo(s * 1.2, 0, s * 1.05, s * 0.035)
+      ctx.quadraticCurveTo(0, s * 0.19, -s * 0.82, 0)
       ctx.fill()
 
-      // 左翼（進行方向と逆）
+      // ---- 長く尖ったくちばし（進行方向＝左へ） ----
       ctx.beginPath()
-      ctx.moveTo(p.x, p.y)
-      ctx.quadraticCurveTo(p.x + p.size * 1.4, p.y - flapY - p.size * 0.3, p.x + p.size * 2.4, p.y - flapY)
-      ctx.quadraticCurveTo(p.x + p.size * 1.4, p.y + p.size * 0.2, p.x, p.y)
-      ctx.fill()
-
-      // 右翼
-      ctx.beginPath()
-      ctx.moveTo(p.x, p.y)
-      ctx.quadraticCurveTo(p.x - p.size * 1.4, p.y - flapY - p.size * 0.3, p.x - p.size * 2.4, p.y - flapY)
-      ctx.quadraticCurveTo(p.x - p.size * 1.4, p.y + p.size * 0.2, p.x, p.y)
-      ctx.fill()
-
-      // くちばし（左向き）
-      ctx.beginPath()
-      ctx.moveTo(p.x - p.size * 0.75, p.y - p.size * 0.08)
-      ctx.lineTo(p.x - p.size * 1.5, p.y)
-      ctx.lineTo(p.x - p.size * 0.75, p.y + p.size * 0.08)
+      ctx.moveTo(-s * 0.78, -s * 0.075)
+      ctx.lineTo(-s * 1.78, 0)
+      ctx.lineTo(-s * 0.78, s * 0.075)
       ctx.closePath()
       ctx.fill()
 
-      // 頭のトサカ
+      // ---- 象徴的な後方のトサカ ----
       ctx.beginPath()
-      ctx.moveTo(p.x - p.size * 0.5, p.y - p.size * 0.2)
-      ctx.lineTo(p.x + p.size * 0.3, p.y - p.size * 0.6)
-      ctx.lineTo(p.x + p.size * 0.1, p.y - p.size * 0.2)
+      ctx.moveTo(-s * 0.72, -s * 0.04)
+      ctx.lineTo(-s * 0.28, -s * 0.66)
+      ctx.lineTo(-s * 0.5, -s * 0.02)
       ctx.closePath()
       ctx.fill()
+
+      ctx.restore()
     }
 
     const loop = () => {
