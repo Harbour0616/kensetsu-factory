@@ -257,7 +257,8 @@ export default function InvoiceDemo() {
               style={{
                 width: 340, padding: '48px 36px', border: '2px solid #2a4a3a', background: '#0a1a14',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
-                transition: 'all 0.2s',
+                transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s',
+                animation: 'cardIn 0.5s ease backwards', animationDelay: '0.05s',
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.borderColor = '#6effc4'
@@ -288,7 +289,8 @@ export default function InvoiceDemo() {
               style={{
                 width: 340, padding: '48px 36px', border: '2px solid #2a4a3a', background: '#0a1a14',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
-                transition: 'all 0.2s',
+                transition: 'border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s',
+                animation: 'cardIn 0.5s ease backwards', animationDelay: '0.18s',
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.borderColor = '#6effc4'

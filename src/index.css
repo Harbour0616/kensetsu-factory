@@ -19,14 +19,29 @@ html, body, #root {
   overflow: hidden;
 }
 
-/* scanline overlay */
+/* CRT scanlines — subtle vertical drift for a "live tube" feel */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 6px);
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+  background-size: 100% 6px;
   pointer-events: none;
   z-index: 100;
+  animation: scanline-drift 6s linear infinite;
+}
+
+/* CRT vignette + barely-there flicker layered above the scanlines */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 75% 70% at 50% 45%, transparent 60%, rgba(0,0,0,0.42) 100%),
+    radial-gradient(ellipse 120% 90% at 50% 50%, rgba(110,255,196,0.035), transparent 55%);
+  pointer-events: none;
+  z-index: 101;
+  animation: crt-flicker 5s steps(48) infinite;
 }
 
 @keyframes blink {
@@ -37,4 +52,37 @@ body::after {
 @keyframes ticker {
   from { transform: translateX(100vw); }
   to   { transform: translateX(-100%); }
+}
+
+@keyframes scanline-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 0 6px; }
+}
+
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; }
+  48%      { opacity: 0.97; }
+  50%      { opacity: 0.92; }
+  52%      { opacity: 0.98; }
+  90%      { opacity: 0.99; }
+}
+
+/* shared entrance / juice keyframes */
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.93); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after, body::before { animation: none; }
 }
