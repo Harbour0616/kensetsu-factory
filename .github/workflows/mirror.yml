@@ -1,0 +1,31 @@
+# 公開されている3Dのモデルの重み(Tencent Hunyuan3D-2mv)を、作業用にこの置き場のリリースへ写す(2026-10-24)
+# 重みの使用条件: Tencent Hunyuan 3D 2.0 Community License(https://huggingface.co/tencent/Hunyuan3D-2mv/blob/main/LICENSE)
+name: weights-mirror
+on:
+  push:
+    branches: [weights-mirror]
+permissions:
+  contents: write
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: 重みを取る
+        run: |
+          pip install -q -U huggingface_hub
+          python -c "from huggingface_hub import snapshot_download as s; s('tencent/Hunyuan3D-2mv', allow_patterns=['hunyuan3d-dit-v2-mv/*','LICENSE*','README*'], local_dir='w')"
+          ls -laR w
+      - name: 分けてリリースに置く
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd w
+          tar cf ../hy3d2mv.tar hunyuan3d-dit-v2-mv LICENSE* README* 2>/dev/null || tar cf ../hy3d2mv.tar hunyuan3d-dit-v2-mv
+          cd ..
+          sha256sum hy3d2mv.tar > hy3d2mv.sha256
+          split -b 1900m -d hy3d2mv.tar hy3d2mv.tar.part
+          ls -la
+          gh release create weights-hy3d2mv hy3d2mv.tar.part* hy3d2mv.sha256 -R "$GITHUB_REPOSITORY" --target weights-mirror \
+            --prerelease --title "作業用の重みの写し (Hunyuan3D-2mv)" \
+            --notes "Tencent Hunyuan3D-2mv の公開の重みの写し。使用条件は Tencent Hunyuan 3D 2.0 Community License(同梱の LICENSE)。"
