@@ -1,0 +1,195 @@
+# 未公開の準備案。鍵の設定と公開先への追加は、本人の事前確認後に行う。
+# この cloud-run フォルダーの中身を、専用枝の保存先直下へ置く想定。
+# 標準の公開用計算機だけを固定して使う。有料の大型計算機は選択できない。
+# 根拠: https://docs.github.com/en/actions/reference/runners/github-hosted-runners
+name: ニャーの無料立体制作
+
+on:
+  push:
+    branches:
+      - codex/nya-hunyuan-free
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nya-free-hunyuan
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    if: >-
+      github.repository == 'Harbour0616/kensetsu-factory' &&
+      github.event.repository.private == false &&
+      github.ref == 'refs/heads/codex/nya-hunyuan-free' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      NUMEXPR_NUM_THREADS: '4'
+      CUDA_VISIBLE_DEVICES: ''
+      PYTHONUNBUFFERED: '1'
+      PYTHONHASHSEED: '12345'
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      DO_NOT_TRACK: '1'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: 公開の標準計算機を確認
+        env:
+          HOSTED: ${{ runner.environment }}
+          REPOSITORY: ${{ github.repository }}
+          PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          test "$HOSTED" = github-hosted
+          test "$REPOSITORY" = Harbour0616/kensetsu-factory
+          test "$PRIVATE" = false
+          test "$RUNNER_OS" = Linux
+          test "$RUNNER_ARCH" = X64
+          . /etc/os-release
+          test "$VERSION_ID" = 24.04
+          private_root="$RUNNER_TEMP/nya-private-$GITHUB_RUN_ID"
+          mkdir -p "$private_root/output" "$private_root/work" "$private_root/models"
+          chmod 700 "$private_root" "$private_root/output" "$private_root/work"
+          echo "PRIVATE_ROOT=$private_root" >> "$GITHUB_ENV"
+          echo '公開用の標準計算機を確認しました。推論は未開始です。'
+
+      - name: 専用枝の台本を取得
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: 処理系を用意
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.11'
+
+      - name: 固定した道具を用意
+        run: |
+          echo '固定した道具を準備しています。推論は未開始です。'
+          {
+            python -m pip install --disable-pip-version-check --no-cache-dir -r requirements.txt
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends blender xvfb libgl1-mesa-dri libegl-mesa0 libopengl0 fonts-noto-cjk python3-pil xauth
+          } > "$PRIVATE_ROOT/output/setup.log" 2>&1
+
+      - name: 暗号化した入力を復号
+        id: unpack
+        env:
+          NYA_3D_BUNDLE_KEY_B64: ${{ secrets.NYA_3D_BUNDLE_KEY_B64 }}
+        run: |
+          if ! python bundle_io.py unpack bundle.bin "$PRIVATE_ROOT/work" > "$PRIVATE_ROOT/output/unpack.log" 2>&1; then
+            echo '入力の復号と照合が完了しませんでした。推論は開始しません。'
+            exit 1
+          fi
+          echo '入力の復号と照合が完了しました。推論は未開始です。'
+
+      - name: 固定した形生成コードを取得
+        run: |
+          echo '羊と同じ形生成コードを準備しています。'
+          {
+            git init -q "$PRIVATE_ROOT/Hunyuan3D-2"
+            git -C "$PRIVATE_ROOT/Hunyuan3D-2" remote add origin https://github.com/Tencent/Hunyuan3D-2.git
+            git -C "$PRIVATE_ROOT/Hunyuan3D-2" fetch -q --depth 1 origin f8db63096c8282cb27354314d896feba5ba6ff8a
+            git -C "$PRIVATE_ROOT/Hunyuan3D-2" checkout -q --detach FETCH_HEAD
+            test "$(git -C "$PRIVATE_ROOT/Hunyuan3D-2" rev-parse HEAD)" = f8db63096c8282cb27354314d896feba5ba6ff8a
+          } > "$PRIVATE_ROOT/output/code-download.log" 2>&1
+
+      - name: 通常版の重みだけ取得して照合
+        run: |
+          echo '通常版の重みを取得しています。推論は未開始です。'
+          {
+            model="$PRIVATE_ROOT/models/hunyuan3d-dit-v2-mv"
+            mkdir -p "$model"
+            source=https://huggingface.co/tencent/Hunyuan3D-2mv/resolve/3a761b539b29fe4ff64714813aa9560fd66f5de0
+            curl --fail --location --silent --show-error --retry 3 "$source/hunyuan3d-dit-v2-mv/model.fp16.safetensors" --output "$model/model.fp16.safetensors.partial"
+            test "$(stat -c %s "$model/model.fp16.safetensors.partial")" = 4928151562
+            echo "d36f5881bcdc56726b73e517cd444c13c60732431622da7268145355c8d38e9c  $model/model.fp16.safetensors.partial" | sha256sum --check --status
+            mv "$model/model.fp16.safetensors.partial" "$model/model.fp16.safetensors"
+            curl --fail --location --silent --show-error --retry 3 "$source/hunyuan3d-dit-v2-mv/config.yaml" --output "$model/config.yaml"
+            echo "315fd5bf601d1d103130b9fda202f1bd28eda495e68ed1621bc823d5519c5e5b  $model/config.yaml" | sha256sum --check --status
+            curl --fail --location --silent --show-error --retry 3 "$source/LICENSE" --output "$PRIVATE_ROOT/output/重みの使用条件.txt"
+            curl --fail --location --silent --show-error --retry 3 "$source/NOTICE" --output "$PRIVATE_ROOT/output/重みの表示事項.txt"
+          } > "$PRIVATE_ROOT/output/weights-download.log" 2>&1
+          echo '通常版の重みを照合しました。推論は未開始です。'
+
+      - name: ４並列で形を推論
+        id: inference
+        env:
+          HF_HUB_OFFLINE: '1'
+          TRANSFORMERS_OFFLINE: '1'
+        run: |
+          echo '形の推論を開始します。模型はまだ完成していません。'
+          python run_cloud.py --workdir "$PRIVATE_ROOT/work" --models-dir "$PRIVATE_ROOT/models" --code-dir "$PRIVATE_ROOT/Hunyuan3D-2" --output-dir "$PRIVATE_ROOT/output" > "$PRIVATE_ROOT/output/launcher.log" 2>&1 &
+          worker=$!
+          while kill -0 "$worker" 2>/dev/null; do
+            python - "$PRIVATE_ROOT/output/status.json" <<'PY'
+          import json, pathlib, sys
+          try:
+              data = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
+              allowed = ('状態', '推論', '工程', '完了段数', '経過秒', 'メモリ')
+              print(json.dumps({key: data[key] for key in allowed if key in data}, ensure_ascii=False))
+          except (OSError, ValueError):
+              print('進行状況を確認中です。模型は未完成です。')
+          PY
+            sleep 60
+          done
+          if wait "$worker"; then
+            echo '形の推論が終了しました。次に確認画像を描きます。'
+          else
+            echo '形の推論は完成しませんでした。詳細は暗号化した記録に保存します。'
+            exit 1
+          fi
+
+      - name: 推論終了後に模型の確認画像を描く
+        timeout-minutes: 20
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+          GALLIUM_DRIVER: llvmpipe
+          LP_NUM_THREADS: '4'
+        run: |
+          echo '推論処理の終了後、模型の確認画像を描いています。'
+          {
+            xvfb-run -a blender --background --factory-startup --threads 4 --python-exit-code 2 --python render_preview.py -- --model "$PRIVATE_ROOT/output/nya_mv.glb" --output-dir "$PRIVATE_ROOT/output/preview"
+            /usr/bin/python3 render_preview.py --compose-only --output-dir "$PRIVATE_ROOT/output/preview"
+          } > "$PRIVATE_ROOT/output/preview.log" 2>&1
+          echo '模型の確認画像ができました。採用の確認はまだです。'
+
+      - name: 模型と確認画像と記録を暗号化
+        id: package
+        if: always() && steps.unpack.outcome == 'success'
+        env:
+          NYA_3D_BUNDLE_KEY_B64: ${{ secrets.NYA_3D_BUNDLE_KEY_B64 }}
+        run: |
+          if ! python bundle_io.py pack "$PRIVATE_ROOT/output" "$PRIVATE_ROOT/result.bin" > "$PRIVATE_ROOT/package-private.log" 2>&1; then
+            echo '結果の暗号化が完了しませんでした。平文の結果は公開しません。'
+            exit 1
+          fi
+          echo '結果を暗号化しました。'
+
+      - name: 暗号化した結果だけを保存
+        if: always() && steps.package.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nya-private-result-${{ github.run_id }}
+          path: ${{ runner.temp }}/nya-private-${{ github.run_id }}/result.bin
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+      - name: 一時計算機の平文を片付ける
+        if: always()
+        run: |
+          private_root="$RUNNER_TEMP/nya-private-$GITHUB_RUN_ID"
+          case "$private_root" in
+            "$RUNNER_TEMP"/nya-private-*) rm -rf -- "$private_root" ;;
+            *) echo '一時領域の場所が一致しません。'; exit 1 ;;
+          esac
+          echo '一時計算機の作業領域を片付けました。'

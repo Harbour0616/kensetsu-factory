@@ -1,0 +1,10 @@
+workdir/
+output/
+models/
+Hunyuan3D-2/
+*.key
+*.pem
+*.log
+.secrets/
+result.bin
+__pycache__/

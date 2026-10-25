@@ -1,0 +1,23 @@
+# 羊の記録と同じ通常版用。標準の Linux・Python 3.11・中央演算装置だけを使う。
+# 公式の中央演算装置版を固定し、画像用計算装置向けの大型依存を取得しない。
+# 配布根拠: https://download.pytorch.org/whl/cpu/torch/
+torch @ https://download-r2.pytorch.org/whl/cpu/torch-2.14.1%2Bcpu-cp311-cp311-manylinux_2_28_x86_64.whl#sha256=5e38154c8896d426a5df58bf2276b603e82184dfae4f54d77dbb212f36e34f37
+torchvision @ https://download-r2.pytorch.org/whl/cpu/torchvision-0.29.1%2Bcpu-cp311-cp311-manylinux_2_28_x86_64.whl#sha256=5df6b59fccec8046df9b1ef197d6b5cd8523d1a2e0b981df69fbfd908ccbc464
+transformers==4.49.0
+diffusers==0.32.2
+tokenizers==0.21.4
+huggingface-hub==0.36.0
+safetensors==0.5.3
+accelerate==1.4.0
+numpy==2.2.6
+scipy==1.15.3
+Pillow==11.2.1
+omegaconf==2.3.0
+einops==0.8.1
+opencv-python-headless==4.11.0.86
+trimesh==4.6.5
+pymeshlab==2025.7.post1
+scikit-image==0.25.2
+PyYAML==6.0.2
+tqdm==4.67.1
+psutil==7.0.0
