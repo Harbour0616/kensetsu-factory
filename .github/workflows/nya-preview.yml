@@ -1,0 +1,148 @@
+# 既存模型の確認画像だけを作る。形の推論・重み取得・原画変更は行わない。
+# このフォルダーの中身と、回収済みの暗号化結果 result.bin を専用枝の直下へ置く。
+name: ニャーの既存模型の確認画像
+
+on:
+  push:
+    branches:
+      - codex/nya-preview-repair
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nya-free-preview-repair
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    if: >-
+      github.repository == 'Harbour0616/kensetsu-factory' &&
+      github.event.repository.private == false &&
+      github.ref == 'refs/heads/codex/nya-preview-repair' &&
+      github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      OMP_NUM_THREADS: '4'
+      MKL_NUM_THREADS: '4'
+      OPENBLAS_NUM_THREADS: '4'
+      NUMEXPR_NUM_THREADS: '4'
+      LIBGL_ALWAYS_SOFTWARE: '1'
+      GALLIUM_DRIVER: llvmpipe
+      LP_NUM_THREADS: '4'
+      CUDA_VISIBLE_DEVICES: ''
+      PYTHONUNBUFFERED: '1'
+      DO_NOT_TRACK: '1'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: 無料の標準計算機と専用枝を確認
+        env:
+          HOSTED: ${{ runner.environment }}
+          REPOSITORY: ${{ github.repository }}
+          PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          test "$HOSTED" = github-hosted
+          test "$REPOSITORY" = Harbour0616/kensetsu-factory
+          test "$PRIVATE" = false
+          test "$GITHUB_REF" = refs/heads/codex/nya-preview-repair
+          test "$RUNNER_OS" = Linux
+          test "$RUNNER_ARCH" = X64
+          . /etc/os-release
+          test "$VERSION_ID" = 24.04
+          private_root="$RUNNER_TEMP/nya-preview-private-$GITHUB_RUN_ID"
+          mkdir -p "$private_root/source" "$private_root/output"
+          chmod 700 "$private_root" "$private_root/source" "$private_root/output"
+          echo "PRIVATE_ROOT=$private_root" >> "$GITHUB_ENV"
+          echo '既存模型の確認画像だけを作ります。形の推論は行いません。'
+
+      - name: 確認画像専用の台本を取得
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: 保存済みの暗号化結果を復号して模型を照合
+        id: unpack
+        env:
+          NYA_3D_BUNDLE_KEY_B64: ${{ secrets.NYA_3D_BUNDLE_KEY_B64 }}
+        run: |
+          if ! node bundle_crypto.mjs unpack result.bin "$PRIVATE_ROOT/source" > "$PRIVATE_ROOT/output/unpack.log" 2>&1; then
+            echo '保存済みの結果を復号できませんでした。模型の描画は開始しません。'
+            exit 1
+          fi
+          test -s "$PRIVATE_ROOT/source/nya_mv.glb"
+          echo "f4d02dae7f8c18bfd12ede0f4902247b36873185b7234b507d41d3a6b070ce63  $PRIVATE_ROOT/source/nya_mv.glb" | sha256sum --check --status
+          cp -- "$PRIVATE_ROOT/source/nya_mv.glb" "$PRIVATE_ROOT/output/nya_mv.glb"
+          printf '%s\n' '{"状態":"未開始","推論":"再生成なし","工程":"描画環境の準備","元の実行番号":"40193616228"}' > "$PRIVATE_ROOT/output/status.json"
+          echo '保存済みの模型を照合しました。形の推論は行いません。'
+
+      - name: 描画側の数値処理と画像読込を先に確認
+        run: |
+          echo '確認画像に必要な部品を、描画ソフト自身の処理系で確認します。'
+          {
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends blender xvfb libgl1-mesa-dri libegl-mesa0 libopengl0 fonts-noto-cjk python3-pil python3-numpy xauth
+            xvfb-run -a blender --background --factory-startup --threads 4 --python-exit-code 2 --python-expr "import bpy, numpy; from io_scene_gltf2.blender.imp.gltf2_blender_gltf import BlenderGlTF; print('描画用の必要部品を確認しました。')"
+            /usr/bin/python3 -c "from PIL import Image, ImageDraw, ImageFont; ImageFont.truetype('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', 22); print('画像合成と日本語フォントを確認しました。')"
+          } > "$PRIVATE_ROOT/output/setup.log" 2>&1
+          echo '描画側の必要部品を確認しました。'
+
+      - name: 既存模型から塗装前の四方向を描く
+        id: render
+        run: |
+          echo '既存模型の確認画像を描いています。模型の再生成は行いません。'
+          printf '%s\n' '{"状態":"実行中","推論":"再生成なし","工程":"塗装前の四方向描画","元の実行番号":"40193616228"}' > "$PRIVATE_ROOT/output/status.json"
+          {
+            xvfb-run -a blender --background --factory-startup --threads 4 --python-exit-code 2 --python render_preview.py -- --model "$PRIVATE_ROOT/source/nya_mv.glb" --output-dir "$PRIVATE_ROOT/output/preview"
+            /usr/bin/python3 render_preview.py --compose-only --output-dir "$PRIVATE_ROOT/output/preview"
+          } > "$PRIVATE_ROOT/output/preview.log" 2>&1
+          test -s "$PRIVATE_ROOT/output/preview/all.png"
+          echo "f4d02dae7f8c18bfd12ede0f4902247b36873185b7234b507d41d3a6b070ce63  $PRIVATE_ROOT/source/nya_mv.glb" | sha256sum --check --status
+          printf '%s\n' '{"状態":"確認画像作成済み","推論":"再生成なし","工程":"塗装前の四方向描画完了","元の実行番号":"40193616228","原画との比較":"未実施・向きは仮置き","模型の変更":"なし"}' > "$PRIVATE_ROOT/output/status.json"
+          echo '塗装前の確認画像を作成しました。原画との比較と採用の確認は未実施です。'
+
+      - name: 確認画像と記録を暗号化
+        id: package
+        if: always() && steps.unpack.outcome == 'success'
+        env:
+          NYA_3D_BUNDLE_KEY_B64: ${{ secrets.NYA_3D_BUNDLE_KEY_B64 }}
+          PREVIEW_OUTCOME: ${{ steps.render.outcome }}
+        run: |
+          if test "$PREVIEW_OUTCOME" != success; then
+            /usr/bin/python3 - "$PRIVATE_ROOT/output/status.json" <<'PY'
+          import json, pathlib, sys
+          target = pathlib.Path(sys.argv[1])
+          record = json.loads(target.read_text(encoding='utf-8')) if target.exists() else {}
+          record.update({'状態': '確認画像未完成', '推論': '再生成なし', '工程': '描画前の準備または描画で停止', '模型の変更': 'なし'})
+          target.write_text(json.dumps(record, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          fi
+          if ! node bundle_crypto.mjs pack "$PRIVATE_ROOT/output" "$PRIVATE_ROOT/result.bin" > "$PRIVATE_ROOT/package-private.log" 2>&1; then
+            echo '確認画像と記録の暗号化が完了しませんでした。平文では保存しません。'
+            exit 1
+          fi
+          echo '確認画像と記録を暗号化しました。'
+
+      - name: 暗号化した確認画像だけを保存
+        if: always() && steps.package.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: nya-preview-result-${{ github.run_id }}
+          path: ${{ runner.temp }}/nya-preview-private-${{ github.run_id }}/result.bin
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+      - name: 一時計算機の平文を片付ける
+        if: always()
+        run: |
+          private_root="$RUNNER_TEMP/nya-preview-private-$GITHUB_RUN_ID"
+          case "$private_root" in
+            "$RUNNER_TEMP"/nya-preview-private-*) rm -rf -- "$private_root" ;;
+            *) echo '一時領域の場所が一致しません。'; exit 1 ;;
+          esac
+          echo '一時計算機の作業領域を片付けました。'
